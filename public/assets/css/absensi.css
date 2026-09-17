@@ -1,0 +1,342 @@
+/* =========================================
+   WRAPPER & KARTU KONTEN
+   ========================================= */
+.absensi-wrapper {
+  padding: 10px;
+  color: #e2e8f0;
+}
+
+.card-custom {
+  background: rgba(30, 41, 59, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 18px !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title-custom {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* =========================================
+   FORM INPUT & TEXTAREA
+   ========================================= */
+.form-label-custom {
+  display: block;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.input-custom,
+.textarea-custom {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: #ffffff;
+  padding: 12px 16px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+}
+
+.input-custom:focus,
+.textarea-custom:focus {
+  border-color: #3b82f6;
+  background: rgba(15, 23, 42, 0.85);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+/* =========================================
+   TABEL PERSONEL (ANTI SCROLL)
+   ========================================= */
+.table-responsive-custom {
+  width: 100%;
+  overflow-x: hidden; /* Mencegah scroll menyamping */
+}
+
+.table-custom {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table-custom th {
+  text-align: left;
+  padding: 12px 14px;
+  color: #94a3b8;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+.table-custom td {
+  padding: 12px 14px;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+/* =========================================
+   RADIO BUTTON STATUS ABSENSI (GRID 3 KOLOM)
+   ========================================= */
+.status-grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  min-width: 350px; /* Lebar minimum agar tombol tidak terlalu gepeng */
+}
+
+.status-item-inline input[type="radio"] {
+  display: none;
+}
+
+.status-btn-sm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  user-select: none;
+}
+
+.status-btn-sm:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Warna Saat Terpilih (Sesuai Referensi Gambar) */
+.status-item-inline input[type="radio"]:checked + .btn-hadir {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #10b981;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #10b981;
+}
+.status-item-inline input[type="radio"]:checked + .btn-izin {
+  background: rgba(234, 179, 8, 0.15);
+  border-color: #eab308;
+  color: #eab308;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #eab308;
+}
+.status-item-inline input[type="radio"]:checked + .btn-sakit {
+  background: rgba(249, 115, 22, 0.15);
+  border-color: #f97316;
+  color: #f97316;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #f97316;
+}
+.status-item-inline input[type="radio"]:checked + .btn-dinas {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+  color: #3b82f6;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #3b82f6;
+}
+.status-item-inline input[type="radio"]:checked + .btn-alfa {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #ef4444;
+}
+.status-item-inline input[type="radio"]:checked + .btn-lepas {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: #a855f7;
+  color: #a855f7;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #a855f7;
+}
+.status-item-inline input[type="radio"]:checked + .btn-terlambat {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #f59e0b;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #f59e0b;
+}
+.status-item-inline input[type="radio"]:checked + .btn-pendidikan {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: #06b6d4;
+  color: #06b6d4;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #06b6d4;
+}
+.status-item-inline input[type="radio"]:checked + .btn-bko {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: #f43f5e;
+  color: #f43f5e;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #f43f5e;
+}
+
+/* =========================================
+   REKAP HORIZONTAL (DI BAWAH)
+   ========================================= */
+.rekap-grid-bottom {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.rekap-item-box {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.rekap-item-box span {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rekap-item-box strong {
+  font-size: 22px;
+  color: #ffffff;
+}
+
+.dot-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-hadir {
+  background: #10b981;
+}
+.dot-izin {
+  background: #eab308;
+}
+.dot-sakit {
+  background: #f97316;
+}
+.dot-dinas {
+  background: #3b82f6;
+}
+.dot-alfa {
+  background: #ef4444;
+}
+.dot-lepas {
+  background: #a855f7;
+}
+.dot-terlambat {
+  background: #f59e0b;
+}
+.dot-pendidikan {
+  background: #06b6d4;
+}
+.dot-bko {
+  background: #f43f5e;
+}
+
+/* =========================================
+   TOMBOL SIMPAN UTAMA
+   ========================================= */
+.btn-save-all {
+  background: linear-gradient(135deg, #059669, #047857);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 8px;
+  transition: all 0.25s ease;
+}
+
+.btn-save-all:hover {
+  background: linear-gradient(135deg, #10b981, #059669);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+/* Styling Tabel Personel Absensi */
+.table-custom {
+  width: 100% !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.table-custom th,
+.table-custom td {
+  padding: 10px 8px;
+  vertical-align: middle;
+}
+
+/* Grid Tombol Status Kehadiran Ringkas */
+.status-grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 100%;
+}
+
+.status-item-inline {
+  position: relative;
+  width: 100%;
+}
+
+.status-item-inline input[type="radio"] {
+  display: none;
+}
+
+.status-btn-sm {
+  display: block;
+  width: 100%;
+  padding: 6px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+/* Efek Tombol Dipilih (Checked) */
+.status-item-inline input[type="radio"]:checked + .status-btn-sm {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+}
