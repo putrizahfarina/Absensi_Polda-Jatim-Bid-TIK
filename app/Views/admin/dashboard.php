@@ -1,4 +1,3 @@
-```php
 <?= $this->extend('templates/admin_page_layout') ?>
 
 <?= $this->section('content') ?>
@@ -25,7 +24,7 @@
     --polda-white: #ffffff;
 
     --text-dark: #202124;
-    --text-muted: #777;
+    --text-muted: #555555;
 
     --border: #e8e8e8;
 
@@ -42,13 +41,12 @@
     width: 100%;
     max-width: 100%;
     margin: 0;
-    padding: 5px 0 30px 0;
+    padding: 0 0 30px 0;
 }
 
 
 /* ============================================================
    MENGHILANGKAN HEADER / JUDUL BAWAAN LAYOUT
-   Supaya tidak bertumpuk dengan dashboard
 ============================================================ */
 
 .page-header,
@@ -59,12 +57,6 @@
     display: none !important;
 }
 
-
-/*
-   Beberapa template menggunakan heading di dalam
-   content wrapper. Kita tidak menyentuh seluruh .content
-   agar dashboard tidak rusak.
-*/
 .polda-dashboard ~ .page-header {
     display: none !important;
 }
@@ -78,7 +70,8 @@
     position: relative;
     overflow: hidden;
 
-    min-height: 175px;
+    width: 100%;
+    min-height: 225px;
 
     display: flex;
     align-items: center;
@@ -93,9 +86,9 @@
 
     border-radius: 20px;
 
-    padding: 30px 34px;
+    padding: 42px 45px;
 
-    margin-bottom: 25px;
+    margin-bottom: 28px;
 
     color: var(--polda-white);
 
@@ -103,20 +96,22 @@
 }
 
 
-/* Ornamen lingkaran */
+/* ============================================================
+   DEKORASI HEADER
+============================================================ */
 
 .polda-welcome::before {
     content: "";
 
     position: absolute;
 
-    width: 270px;
-    height: 270px;
+    width: 320px;
+    height: 320px;
 
-    right: -95px;
-    top: -125px;
+    right: -110px;
+    top: -150px;
 
-    border: 42px solid rgba(199, 165, 74, .13);
+    border: 45px solid rgba(199, 165, 74, .13);
 
     border-radius: 50%;
 }
@@ -127,19 +122,21 @@
 
     position: absolute;
 
-    width: 130px;
-    height: 130px;
+    width: 160px;
+    height: 160px;
 
-    right: 100px;
-    bottom: -80px;
+    right: 120px;
+    bottom: -95px;
 
-    border: 20px solid rgba(181, 18, 27, .18);
+    border: 23px solid rgba(181, 18, 27, .18);
 
     border-radius: 50%;
 }
 
 
-/* Isi header */
+/* ============================================================
+   HEADER CONTENT
+============================================================ */
 
 .polda-welcome-content {
     position: relative;
@@ -150,9 +147,10 @@
 .polda-welcome-label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
 
-    font-size: 11px;
+    gap: 9px;
+
+    font-size: 13px;
     font-weight: 800;
 
     letter-spacing: 1.8px;
@@ -161,15 +159,15 @@
 
     color: #e4c875;
 
-    margin-bottom: 9px;
+    margin-bottom: 13px;
 }
 
 
 .polda-welcome-label::before {
     content: "";
 
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
 
     background: var(--polda-red);
 
@@ -180,7 +178,7 @@
 .polda-welcome h2 {
     margin: 0;
 
-    font-size: 27px;
+    font-size: 34px;
     line-height: 1.25;
 
     font-weight: 800;
@@ -190,11 +188,11 @@
 
 
 .polda-welcome p {
-    margin: 9px 0 0;
+    margin: 12px 0 0;
 
     color: rgba(255, 255, 255, .76);
 
-    font-size: 13px;
+    font-size: 15px;
 
     line-height: 1.6;
 }
@@ -204,9 +202,9 @@
     display: inline-flex;
     align-items: center;
 
-    margin-top: 17px;
+    margin-top: 20px;
 
-    padding: 7px 12px;
+    padding: 9px 15px;
 
     border-radius: 8px;
 
@@ -214,16 +212,16 @@
 
     border: 1px solid rgba(255, 255, 255, .10);
 
-    font-size: 12px;
+    font-size: 13px;
 
     color: rgba(255, 255, 255, .88);
 }
 
 
 .polda-date .material-icons {
-    font-size: 15px;
+    font-size: 17px;
 
-    margin-right: 6px;
+    margin-right: 7px;
 }
 
 
@@ -233,56 +231,65 @@
 
 .polda-section-title {
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 
 .polda-section-title-left {
     display: flex;
+
     align-items: center;
-    gap: 10px;
+
+    gap: 11px;
 }
 
 
 .polda-section-title-icon {
-    width: 34px;
-    height: 34px;
+    width: 40px;
+    height: 40px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
-    border-radius: 9px;
+    border-radius: 10px;
 
-    background: var(--polda-red-soft);
+    background: var(--polda-gold-soft);
 
-    color: var(--polda-red);
+    color: var(--polda-gold);
 }
 
 
 .polda-section-title-icon .material-icons {
-    font-size: 18px;
+    font-size: 21px;
 }
 
 
 .polda-section-title h3 {
     margin: 0;
 
-    font-size: 16px;
+    font-size: 19px;
 
     font-weight: 800;
 
-    color: var(--polda-black);
+    color: var(--polda-gold);
 }
 
 
 .polda-section-title span {
-    font-size: 11px;
+    display: block;
 
-    color: #888;
+    font-size: 13px;
+
+    color: #555555;
+
+    margin-top: 3px;
 }
 
 
@@ -293,11 +300,12 @@
 .polda-kpi-grid {
     display: grid;
 
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
 
-    gap: 17px;
+    gap: 18px;
 
-    margin-bottom: 27px;
+    margin-bottom: 29px;
 }
 
 
@@ -314,9 +322,9 @@
 
     border-radius: 16px;
 
-    padding: 19px;
+    padding: 21px;
 
-    min-height: 145px;
+    min-height: 155px;
 
     overflow: hidden;
 
@@ -338,8 +346,6 @@
 }
 
 
-/* Garis warna kiri */
-
 .polda-kpi::before {
     content: "";
 
@@ -354,8 +360,6 @@
     background: var(--polda-red);
 }
 
-
-/* Lingkaran dekorasi */
 
 .polda-kpi::after {
     content: "";
@@ -374,10 +378,9 @@
 }
 
 
-/* Header KPI */
-
 .polda-kpi-head {
     position: relative;
+
     z-index: 2;
 
     display: flex;
@@ -386,17 +389,16 @@
 
     justify-content: space-between;
 
-    margin-bottom: 17px;
+    margin-bottom: 18px;
 }
 
 
-/* Icon */
-
 .polda-kpi-icon {
-    width: 45px;
-    height: 45px;
+    width: 48px;
+    height: 48px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -404,43 +406,41 @@
 
     color: #ffffff;
 
-    box-shadow: 0 5px 12px rgba(0, 0, 0, .10);
+    box-shadow:
+        0 5px 12px rgba(0, 0, 0, .10);
 }
 
 
 .polda-kpi-icon .material-icons {
-    font-size: 21px;
+    font-size: 23px;
 }
 
 
-/* Badge */
-
 .polda-kpi-status {
-    font-size: 9px;
+    font-size: 11px;
 
     font-weight: 800;
 
     letter-spacing: .7px;
 
-    padding: 5px 8px;
+    padding: 6px 9px;
 
     border-radius: 20px;
 
     background: #f4f4f4;
 
-    color: #666;
+    color: #333333;
 }
 
 
-/* Judul */
-
 .polda-kpi-title {
     position: relative;
+
     z-index: 2;
 
-    font-size: 11px;
+    font-size: 13px;
 
-    color: var(--text-muted);
+    color: #444444;
 
     font-weight: 800;
 
@@ -450,26 +450,25 @@
 }
 
 
-/* Angka */
-
 .polda-kpi-value {
     position: relative;
+
     z-index: 2;
 
-    font-size: 28px;
+    font-size: 32px;
 
     line-height: 1;
 
-    margin-top: 7px;
+    margin-top: 8px;
 
     font-weight: 850;
 
-    color: var(--polda-black);
+    color: #171717;
 }
 
 
 /* ============================================================
-   WARNA MASING-MASING KPI
+   WARNA KPI
 ============================================================ */
 
 .kpi-total::before {
@@ -478,6 +477,15 @@
 
 .kpi-total .polda-kpi-icon {
     background: var(--polda-red);
+}
+
+
+.kpi-hadir::before {
+    background: #198754;
+}
+
+.kpi-hadir .polda-kpi-icon {
+    background: #198754;
 }
 
 
@@ -583,7 +591,7 @@
 
     justify-content: space-between;
 
-    padding: 19px 22px;
+    padding: 21px 24px;
 
     border-bottom: 1px solid var(--border);
 }
@@ -594,15 +602,16 @@
 
     align-items: center;
 
-    gap: 11px;
+    gap: 12px;
 }
 
 
 .polda-card-title-icon {
-    width: 39px;
-    height: 39px;
+    width: 43px;
+    height: 43px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -615,14 +624,14 @@
 
 
 .polda-card-title-icon .material-icons {
-    font-size: 19px;
+    font-size: 21px;
 }
 
 
 .polda-card-title h4 {
     margin: 0;
 
-    font-size: 15px;
+    font-size: 17px;
 
     font-weight: 800;
 
@@ -633,11 +642,11 @@
 .polda-card-title span {
     display: block;
 
-    font-size: 10px;
+    font-size: 12px;
 
-    color: #888;
+    color: #666666;
 
-    margin-top: 3px;
+    margin-top: 4px;
 }
 
 
@@ -646,100 +655,7 @@
 ============================================================ */
 
 .polda-card-body {
-    padding: 21px;
-}
-
-
-/* ============================================================
-   REKAP KEHADIRAN
-============================================================ */
-
-.attendance-grid {
-    display: grid;
-
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-
-    gap: 14px;
-}
-
-
-.attendance-item {
-    position: relative;
-
-    background: #fafafa;
-
-    border: 1px solid var(--border);
-
-    border-radius: 13px;
-
-    padding: 16px;
-
-    transition: .2s ease;
-
-    overflow: hidden;
-}
-
-
-.attendance-item:hover {
-    background: #ffffff;
-
-    transform: translateY(-2px);
-
-    box-shadow: 0 5px 15px rgba(0, 0, 0, .06);
-}
-
-
-.attendance-top {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-}
-
-
-.attendance-label {
-    font-size: 10px;
-
-    color: #777;
-
-    font-weight: 800;
-
-    text-transform: uppercase;
-
-    letter-spacing: .5px;
-}
-
-
-.attendance-icon {
-    width: 32px;
-    height: 32px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 9px;
-
-    background: var(--polda-red-soft);
-
-    color: var(--polda-red);
-}
-
-
-.attendance-icon .material-icons {
-    font-size: 17px;
-}
-
-
-.attendance-number {
-    font-size: 24px;
-
-    font-weight: 850;
-
-    margin-top: 10px;
-
-    color: var(--polda-black);
+    padding: 23px;
 }
 
 
@@ -759,54 +675,14 @@
 
 
 /* ============================================================
-   BADGE
-============================================================ */
-
-.status-badge {
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 5px;
-
-    padding: 5px 9px;
-
-    border-radius: 20px;
-
-    font-size: 10px;
-
-    font-weight: 700;
-
-    background: #f3f3f3;
-
-    color: #555;
-}
-
-
-.status-badge::before {
-    content: "";
-
-    width: 6px;
-    height: 6px;
-
-    border-radius: 50%;
-
-    background: currentColor;
-}
-
-
-/* ============================================================
    RESPONSIVE
 ============================================================ */
 
 @media (max-width: 1200px) {
 
     .polda-kpi-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .attendance-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
     }
 }
 
@@ -814,11 +690,8 @@
 @media (max-width: 900px) {
 
     .polda-kpi-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .attendance-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
     }
 
     .polda-welcome {
@@ -834,30 +707,31 @@
     }
 
     .polda-welcome {
-        padding: 23px;
+        padding: 30px 25px;
 
         border-radius: 15px;
+
+        min-height: 210px;
     }
 
     .polda-welcome h2 {
-        font-size: 21px;
+        font-size: 25px;
     }
 
     .polda-welcome p {
-        font-size: 12px;
+        font-size: 13px;
     }
 
-    .polda-kpi-grid,
-    .attendance-grid {
+    .polda-kpi-grid {
         grid-template-columns: 1fr;
     }
 
     .polda-card-header {
-        padding: 16px;
+        padding: 17px;
     }
 
     .polda-card-body {
-        padding: 16px;
+        padding: 17px;
     }
 
     .chart-container {
@@ -868,12 +742,16 @@
 
 @media (max-width: 400px) {
 
+    .polda-welcome {
+        min-height: 200px;
+    }
+
     .polda-welcome h2 {
-        font-size: 19px;
+        font-size: 21px;
     }
 
     .polda-kpi {
-        min-height: 135px;
+        min-height: 140px;
     }
 }
 
@@ -913,7 +791,9 @@
                     calendar_today
                 </i>
 
-                <?= isset($dateNow) ? $dateNow : date('d F Y'); ?>
+                <?= isset($dateNow)
+                    ? $dateNow
+                    : date('d F Y'); ?>
 
             </div>
 
@@ -923,7 +803,7 @@
 
 
     <!-- ========================================================
-         JUDUL DATA PERSONEL
+         JUDUL STATISTIK PERSONEL
     ========================================================= -->
 
     <div class="polda-section-title">
@@ -987,9 +867,41 @@
             </div>
 
             <div class="polda-kpi-value">
+                <?= $totalPersonel
+                    ?? (isset($siswa)
+                        ? count($siswa)
+                        : 0); ?>
+            </div>
 
-                <?= isset($siswa) ? count($siswa) : 0; ?>
+        </div>
 
+
+        <!-- HADIR -->
+
+        <div class="polda-kpi kpi-hadir">
+
+            <div class="polda-kpi-head">
+
+                <div class="polda-kpi-icon">
+
+                    <i class="material-icons">
+                        check_circle
+                    </i>
+
+                </div>
+
+                <div class="polda-kpi-status">
+                    HADIR
+                </div>
+
+            </div>
+
+            <div class="polda-kpi-title">
+                Hadir
+            </div>
+
+            <div class="polda-kpi-value">
+                <?= $totalHadir ?? 0; ?>
             </div>
 
         </div>
@@ -1020,7 +932,7 @@
             </div>
 
             <div class="polda-kpi-value">
-                0
+                <?= $totalDinas ?? 0; ?>
             </div>
 
         </div>
@@ -1051,7 +963,7 @@
             </div>
 
             <div class="polda-kpi-value">
-                0
+                <?= $totalLepasDinas ?? 0; ?>
             </div>
 
         </div>
@@ -1082,7 +994,7 @@
             </div>
 
             <div class="polda-kpi-value">
-                0
+                <?= $totalCuti ?? 0; ?>
             </div>
 
         </div>
@@ -1113,7 +1025,7 @@
             </div>
 
             <div class="polda-kpi-value">
-                0
+                <?= $totalSakit ?? 0; ?>
             </div>
 
         </div>
@@ -1144,7 +1056,7 @@
             </div>
 
             <div class="polda-kpi-value">
-                0
+                <?= $totalIzin ?? 0; ?>
             </div>
 
         </div>
@@ -1175,7 +1087,7 @@
             </div>
 
             <div class="polda-kpi-value">
-                0
+                <?= $totalTerlambat ?? 0; ?>
             </div>
 
         </div>
@@ -1206,7 +1118,7 @@
             </div>
 
             <div class="polda-kpi-value">
-                0
+                <?= $totalDik ?? 0; ?>
             </div>
 
         </div>
@@ -1237,274 +1149,11 @@
             </div>
 
             <div class="polda-kpi-value">
-                0
+                <?= $totalBko ?? 0; ?>
             </div>
 
         </div>
 
-
-    </div>
-
-
-    <!-- ========================================================
-         REKAP KEHADIRAN
-    ========================================================= -->
-
-    <div class="polda-card">
-
-        <div class="polda-card-header">
-
-            <div class="polda-card-title">
-
-                <div class="polda-card-title-icon">
-
-                    <i class="material-icons">
-                        fact_check
-                    </i>
-
-                </div>
-
-                <div>
-
-                    <h4>
-                        Rekap Kehadiran Anggota
-                    </h4>
-
-                    <span>
-                        Status kehadiran personel hari ini
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="polda-card-body">
-
-            <div class="attendance-grid">
-
-
-                <!-- DINAS -->
-
-                <div class="attendance-item">
-
-                    <div class="attendance-top">
-
-                        <div class="attendance-label">
-                            Dinas
-                        </div>
-
-                        <div class="attendance-icon">
-
-                            <i class="material-icons">
-                                work
-                            </i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="attendance-number">
-                        0
-                    </div>
-
-                </div>
-
-
-                <!-- LEPAS DINAS -->
-
-                <div class="attendance-item">
-
-                    <div class="attendance-top">
-
-                        <div class="attendance-label">
-                            Lepas Dinas
-                        </div>
-
-                        <div class="attendance-icon">
-
-                            <i class="material-icons">
-                                logout
-                            </i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="attendance-number">
-                        0
-                    </div>
-
-                </div>
-
-
-                <!-- CUTI -->
-
-                <div class="attendance-item">
-
-                    <div class="attendance-top">
-
-                        <div class="attendance-label">
-                            Cuti
-                        </div>
-
-                        <div class="attendance-icon">
-
-                            <i class="material-icons">
-                                event
-                            </i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="attendance-number">
-                        0
-                    </div>
-
-                </div>
-
-
-                <!-- SAKIT -->
-
-                <div class="attendance-item">
-
-                    <div class="attendance-top">
-
-                        <div class="attendance-label">
-                            Sakit
-                        </div>
-
-                        <div class="attendance-icon">
-
-                            <i class="material-icons">
-                                healing
-                            </i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="attendance-number">
-                        0
-                    </div>
-
-                </div>
-
-
-                <!-- IZIN -->
-
-                <div class="attendance-item">
-
-                    <div class="attendance-top">
-
-                        <div class="attendance-label">
-                            Izin
-                        </div>
-
-                        <div class="attendance-icon">
-
-                            <i class="material-icons">
-                                assignment
-                            </i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="attendance-number">
-                        0
-                    </div>
-
-                </div>
-
-
-                <!-- TERLAMBAT -->
-
-                <div class="attendance-item">
-
-                    <div class="attendance-top">
-
-                        <div class="attendance-label">
-                            Terlambat
-                        </div>
-
-                        <div class="attendance-icon">
-
-                            <i class="material-icons">
-                                schedule
-                            </i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="attendance-number">
-                        0
-                    </div>
-
-                </div>
-
-
-                <!-- DIK -->
-
-                <div class="attendance-item">
-
-                    <div class="attendance-top">
-
-                        <div class="attendance-label">
-                            DIK
-                        </div>
-
-                        <div class="attendance-icon">
-
-                            <i class="material-icons">
-                                school
-                            </i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="attendance-number">
-                        0
-                    </div>
-
-                </div>
-
-
-                <!-- BKO -->
-
-                <div class="attendance-item">
-
-                    <div class="attendance-top">
-
-                        <div class="attendance-label">
-                            BKO
-                        </div>
-
-                        <div class="attendance-icon">
-
-                            <i class="material-icons">
-                                swap_horiz
-                            </i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="attendance-number">
-                        0
-                    </div>
-
-                </div>
-
-
-            </div>
-
-        </div>
 
     </div>
 
@@ -1534,7 +1183,7 @@
                     </h4>
 
                     <span>
-                        Monitoring jumlah kehadiran anggota
+                        Monitoring jumlah kehadiran anggota berdasarkan status hari ini
                     </span>
 
                 </div>
@@ -1567,29 +1216,66 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-
 document.addEventListener("DOMContentLoaded", function () {
 
-    const canvas = document.getElementById("attendanceChart");
+    const canvas =
+        document.getElementById("attendanceChart");
 
     if (!canvas) {
         return;
     }
 
-    const ctx = canvas.getContext("2d");
+    const ctx =
+        canvas.getContext("2d");
 
 
-    const labels = <?= isset($dateRange)
-        ? json_encode($dateRange)
-        : json_encode([]);
-    ?>;
+    /* ========================================================
+       STATUS ABSENSI
+    ======================================================== */
+
+    const labels = [
+        "HADIR",
+        "DINAS",
+        "LEPAS DINAS",
+        "CUTI",
+        "SAKIT",
+        "IZIN",
+        "TERLAMBAT",
+        "DIK",
+        "BKO"
+    ];
 
 
-    const attendanceData = <?= isset($jumlahKehadiranSiswa)
-        ? json_encode($jumlahKehadiranSiswa)
-        : json_encode([]);
-    ?>;
+    /* ========================================================
+       DATA DARI CONTROLLER
+    ======================================================== */
 
+    const attendanceData = [
+
+        <?= (int) ($totalHadir ?? 0) ?>,
+
+        <?= (int) ($totalDinas ?? 0) ?>,
+
+        <?= (int) ($totalLepasDinas ?? 0) ?>,
+
+        <?= (int) ($totalCuti ?? 0) ?>,
+
+        <?= (int) ($totalSakit ?? 0) ?>,
+
+        <?= (int) ($totalIzin ?? 0) ?>,
+
+        <?= (int) ($totalTerlambat ?? 0) ?>,
+
+        <?= (int) ($totalDik ?? 0) ?>,
+
+        <?= (int) ($totalBko ?? 0) ?>
+
+    ];
+
+
+    /* ========================================================
+       GRAFIK LINE
+    ======================================================== */
 
     new Chart(ctx, {
 
@@ -1603,29 +1289,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 {
 
-                    label: "Kehadiran Anggota",
+                    label: "Jumlah Personel",
 
                     data: attendanceData,
+
+                    borderColor: "#171717",
+
+                    backgroundColor:
+                        "rgba(23, 23, 23, 0.08)",
+
+                    pointBackgroundColor:
+                        "#171717",
+
+                    pointBorderColor:
+                        "#ffffff",
+
+                    pointBorderWidth: 2,
+
+                    pointRadius: 6,
+
+                    pointHoverRadius: 8,
 
                     borderWidth: 3,
 
                     tension: 0.35,
 
-                    fill: true,
-
-                    pointRadius: 4,
-
-                    pointHoverRadius: 6,
-
-                    backgroundColor: "rgba(181, 18, 27, 0.08)",
-
-                    borderColor: "#b5121b",
-
-                    pointBackgroundColor: "#b5121b",
-
-                    pointBorderColor: "#ffffff",
-
-                    pointBorderWidth: 2
+                    fill: true
 
                 }
 
@@ -1663,9 +1352,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         usePointStyle: true,
 
+                        pointStyle: "circle",
+
                         boxWidth: 8,
 
-                        padding: 15
+                        padding: 15,
+
+                        color: "#171717",
+
+                        font: {
+
+                            size: 13,
+
+                            weight: "600"
+
+                        }
 
                     }
 
@@ -1682,7 +1383,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     padding: 12,
 
-                    cornerRadius: 8
+                    cornerRadius: 8,
+
+                    callbacks: {
+
+                        label: function (context) {
+
+                            return " " +
+                                context.parsed.y +
+                                " personel";
+
+                        }
+
+                    }
 
                 }
 
@@ -1701,13 +1414,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     ticks: {
 
-                        color: "#777",
+                        color: "#171717",
 
                         font: {
 
-                            size: 11
+                            size: 11,
 
-                        }
+                            weight: "600"
+
+                        },
+
+                        maxRotation: 0,
+
+                        minRotation: 0
 
                     }
 
@@ -1720,13 +1439,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     ticks: {
 
+                        color: "#171717",
+
                         precision: 0,
 
-                        color: "#777",
+                        stepSize: 1,
 
                         font: {
 
-                            size: 11
+                            size: 12,
+
+                            weight: "500"
+
+                        }
+
+                    },
+
+                    title: {
+
+                        display: true,
+
+                        text: "Jumlah Personel",
+
+                        color: "#171717",
+
+                        font: {
+
+                            size: 12,
+
+                            weight: "600"
 
                         }
 
@@ -1734,7 +1475,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     grid: {
 
-                        color: "rgba(0, 0, 0, 0.06)"
+                        color:
+                            "rgba(0, 0, 0, 0.08)"
 
                     }
 
@@ -1742,14 +1484,69 @@ document.addEventListener("DOMContentLoaded", function () {
 
             }
 
-        }
+        },
+
+
+        plugins: [
+
+            {
+
+                id: "valueLabels",
+
+                afterDatasetsDraw:
+                    function (chart) {
+
+                    const ctx = chart.ctx;
+
+                    ctx.save();
+
+                    ctx.fillStyle = "#171717";
+
+                    ctx.font =
+                        "600 12px Arial";
+
+                    ctx.textAlign =
+                        "center";
+
+                    ctx.textBaseline =
+                        "bottom";
+
+                    const meta =
+                        chart.getDatasetMeta(0);
+
+                    meta.data.forEach(
+                        function (
+                            point,
+                            index
+                        ) {
+
+                            const value =
+                                chart
+                                    .data
+                                    .datasets[0]
+                                    .data[index];
+
+                            ctx.fillText(
+                                value,
+                                point.x,
+                                point.y - 10
+                            );
+
+                        }
+                    );
+
+                    ctx.restore();
+
+                }
+
+            }
+
+        ]
 
     });
 
 });
-
 </script>
 
 
 <?= $this->endSection() ?>
-```

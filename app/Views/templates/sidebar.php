@@ -1,6 +1,6 @@
 <?php
-$user      = auth()->user();
-$context   = $ctx ?? 'dashboard';
+$user     = auth()->user();
+$context  = $ctx ?? 'dashboard';
 $menuItems = [];
 
 // ── Sidebar color based on context ──
@@ -27,7 +27,7 @@ switch ($context) {
 $roleLabel = 'Operator Petugas Absensi';
 if ($user) {
    if ($user->inGroup('superadmin')) {
-      $roleLabel = 'Super Administrator';
+      $roleLabel = 'SIPATIK';
    } elseif ($user->inGroup('kepsek')) {
       $roleLabel = 'Kepala Sekolah';
    } elseif ($user->inGroup('scanner') && !$user->can('admin.access')) {
@@ -38,18 +38,20 @@ if ($user) {
 }
 
 // ── Collect menu sections ──
+// Returns false when no items added to that section
 $hasTeacherSection = false;
 $hasAdminSection   = false;
 
 // ── Teacher / Wali Kelas menus ──
+// Only show for users with a teacher profile
 if ($user && is_guru()) {
    $hasTeacherSection = true;
    $menuItems = array_merge($menuItems, [
       ['title' => 'Dashboard Wali Kelas', 'url' => 'teacher/dashboard', 'icon' => 'dashboard', 'context' => 'teacher-dashboard'],
-      ['title' => 'Pengajuan Izin',       'url' => 'teacher/perizinan',  'icon' => 'mail',      'context' => 'teacher-perizinan'],
-      ['title' => 'Laporan Kelas',         'url' => 'teacher/laporan',   'icon' => 'print',     'context' => 'teacher-laporan'],
-      ['title' => 'QR Code Siswa',         'url' => 'teacher/qr',        'icon' => 'qr_code',   'context' => 'teacher-qr'],
-      ['title' => 'Manajemen Kehadiran',   'url' => 'teacher/attendance', 'icon' => 'event_note','context' => 'teacher-attendance'],
+      ['title' => 'Pengajuan Izin',       'url' => 'teacher/perizinan',  'icon' => 'mail', 'context' => 'teacher-perizinan'],
+      ['title' => 'Laporan Kelas',         'url' => 'teacher/laporan',   'icon' => 'print',      'context' => 'teacher-laporan'],
+      ['title' => 'QR Code Siswa',         'url' => 'teacher/qr',         'icon' => 'qr_code',    'context' => 'teacher-qr'],
+      ['title' => 'Manajemen Kehadiran',   'url' => 'teacher/attendance', 'icon' => 'event_note', 'context' => 'teacher-attendance'],
    ]);
 }
 
@@ -79,15 +81,16 @@ if ($adminItems !== []) {
    $hasAdminSection = true;
 }
 
+// ── Decide whether to show section headers ──
+// If both sections are present, group them with headers
 $showSectionHeaders = ($hasTeacherSection && $hasAdminSection);
 ?>
-
 <div class="sidebar" data-color="<?= $sidebarColor; ?>" data-image="<?= base_url(''); ?>">
    <div class="logo">
       <a class="simple-text logo-normal">
          <b><?= $roleLabel; ?></b>
          <br>
-         <small><?= $generalSettings->school_name ?? 'Bid TIK Polda Jatim'; ?></small>
+         <small>kEPOLISIAN DAERAH JAWA TIMUR</small>
       </a>
    </div>
    <div class="sidebar-wrapper">
@@ -95,11 +98,10 @@ $showSectionHeaders = ($hasTeacherSection && $hasAdminSection);
 
 <?php if ($showSectionHeaders): ?>
 
-         <!-- Wali Kelas section -->
+         <!--Wali Kelas section-->
          <li class="nav-item"><p class="nav-link py-1">Wali Kelas</p></li>
          <?php foreach ($menuItems as $item): ?>
-            <?php $isActive = url_is($item['url'] . '*') || $context === $item['context']; ?>
-            <li class="nav-item <?= $isActive ? 'active' : ''; ?>">
+            <li class="nav-item <?= $context === $item['context'] ? 'active' : ''; ?>">
                <a class="nav-link font-weight-bold" href="<?= base_url($item['url']); ?>">
                   <i class="material-icons"><?= $item['icon']; ?></i>
                   <p><?= $item['title']; ?></p>
@@ -107,11 +109,10 @@ $showSectionHeaders = ($hasTeacherSection && $hasAdminSection);
             </li>
          <?php endforeach; ?>
 
-         <!-- Admin section -->
+         <!--Admin section-->
          <li class="nav-item"><p class="nav-link py-1">Admin</p></li>
          <?php foreach ($adminItems as $item): ?>
-            <?php $isActive = url_is($item['url'] . '*') || $context === $item['context']; ?>
-            <li class="nav-item <?= $isActive ? 'active' : ''; ?>">
+            <li class="nav-item <?= $context === $item['context'] ? 'active' : ''; ?>">
                <a class="nav-link font-weight-bold" href="<?= base_url($item['url']); ?>">
                   <i class="material-icons"><?= $item['icon']; ?></i>
                   <p><?= $item['title']; ?></p>
@@ -120,30 +121,25 @@ $showSectionHeaders = ($hasTeacherSection && $hasAdminSection);
          <?php endforeach; ?>
 
 <?php else: ?>
-
-         <!-- Single section (no grouping) -->
+         <!--Single section (no grouping needed)-->
          <?php foreach (array_merge($menuItems, $adminItems) as $item): ?>
-            <?php $isActive = url_is($item['url'] . '*') || $context === $item['context']; ?>
-            <li class="nav-item <?= $isActive ? 'active' : ''; ?>">
+            <li class="nav-item <?= $context === $item['context'] ? 'active' : ''; ?>">
                <a class="nav-link font-weight-bold" href="<?= base_url($item['url']); ?>">
                   <i class="material-icons"><?= $item['icon']; ?></i>
                   <p><?= $item['title']; ?></p>
                </a>
             </li>
          <?php endforeach; ?>
-
 <?php endif; ?>
-
-         <!-- Fallback: scanner-only -->
+        <!-- Fallback: scanner-only -->
          <?php if (empty($menuItems) && empty($adminItems) && $user && $user->inGroup('scanner')): ?>
-            <li class="nav-item <?= url_is('scan*') || $context === 'scan' ? 'active' : ''; ?>">
+            <li class="nav-item <?= $context === 'scan' ? 'active' : ''; ?>">
                <a class="nav-link font-weight-bold" href="<?= base_url('scan'); ?>">
                   <i class="material-icons">qr_code</i>
                   <p>Scan QR</p>
                </a>
             </li>
          <?php endif; ?>
-
       </ul>
    </div>
 </div>

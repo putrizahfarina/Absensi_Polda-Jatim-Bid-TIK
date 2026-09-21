@@ -14,11 +14,15 @@ class Absensi extends BaseController
         $presensiModel = new PresensiModel();
 
         // 1. Data personel aktif
-        $dataPersonel = $personelModel->where('deleted_at', null)->findAll();
+        $dataPersonel = $personelModel
+            ->where('deleted_at', null)
+            ->findAll();
 
         // 2. Data absensi yang sudah tercatat hari ini
         $hariIni = date('Y-m-d');
-        $absensiHariIni = $presensiModel->select('presensi.*, personel.nama, personel.nrp_nip, personel.satker')
+
+        $absensiHariIni = $presensiModel
+            ->select('presensi.*, personel.nama, personel.nrp_nip, personel.satker')
             ->join('personel', 'personel.id = presensi.personel_id')
             ->where('DATE(presensi.waktu_masuk)', $hariIni)
             ->findAll();
@@ -39,52 +43,96 @@ class Absensi extends BaseController
     }
 
     public function simpan()
-{
-    $presensiModel = new PresensiModel();
-    
-    $statuses      = $this->request->getPost('status'); // Mengambil array status yang diklik
-    $waktuSekarang = date('Y-m-d H:i:s');
-    $hariIni       = date('Y-m-d');
+    {
+        $presensiModel = new PresensiModel();
 
-    // Hanya proses jika ada status pilihan yang diklik oleh user
-    if (!empty($statuses) && is_array($statuses)) {
-        foreach ($statuses as $personelId => $statusPilihan) {
-            
-            // Lewati jika status tidak diisi / tidak diklik
-            if (empty($statusPilihan)) {
-                continue;
-            }
+        // Mengambil status absensi
+        $statuses = $this->request->getPost('status');
 
-            // Cek apakah personel ini sudah punya catatan absen hari ini
-            $cekAbsen = $presensiModel->where('personel_id', $personelId)
-                                      ->where('DATE(waktu_masuk)', $hariIni)
-                                      ->first();
+        // Mengambil Deskripsi Kegiatan Hari Ini
+        $deskripsiKegiatan = trim(
+            $this->request->getPost('deskripsi_kegiatan') ?? ''
+        );
 
-            if ($cekAbsen) {
-                // Jika sudah ada hari ini, perbarui statusnya
-                $presensiModel->update($cekAbsen['id'], [
-                    'status'      => $statusPilihan,
-                    'waktu_masuk' => $waktuSekarang
-                ]);
-            } else {
-                // Jika belum ada hari ini, buat catatan absensi baru
-                $presensiModel->insert([
-                    'personel_id' => $personelId,
-                    'status'      => $statusPilihan,
-                    'waktu_masuk' => $waktuSekarang,
-                ]);
+        $waktuSekarang = date('Y-m-d H:i:s');
+        $hariIni       = date('Y-m-d');
+
+        // Koneksi database langsung
+        // Digunakan karena PresensiModel tidak diubah
+        $db = \Config\Database::connect();
+
+        // Hanya proses jika ada status yang dipilih
+        if (!empty($statuses) && is_array($statuses)) {
+
+            foreach ($statuses as $personelId => $statusPilihan) {
+
+                // Lewati jika status tidak diisi
+                if (empty($statusPilihan)) {
+                    continue;
+                }
+
+                // Cek apakah personel sudah memiliki absensi hari ini
+                $cekAbsen = $presensiModel
+                    ->where('personel_id', $personelId)
+                    ->where('DATE(waktu_masuk)', $hariIni)
+                    ->first();
+
+                if ($cekAbsen) {
+
+                    // Jika sudah ada, update status dan waktu
+                    $presensiModel->update($cekAbsen['id'], [
+                        'status'      => $statusPilihan,
+                        'waktu_masuk' => $waktuSekarang
+                    ]);
+
+                    // Simpan deskripsi kegiatan
+                    $db->table('presensi')
+                        ->where('id', $cekAbsen['id'])
+                        ->update([
+                            'point_apel' => $deskripsiKegiatan
+                        ]);
+
+                } else {
+
+                    // Jika belum ada, buat data absensi baru
+                    $presensiModel->insert([
+                        'personel_id' => $personelId,
+                        'status'      => $statusPilihan,
+                        'waktu_masuk' => $waktuSekarang,
+                    ]);
+
+                    // Ambil ID data yang baru dibuat
+                    $presensiId = $presensiModel->getInsertID();
+
+                    // Simpan deskripsi kegiatan
+                    $db->table('presensi')
+                        ->where('id', $presensiId)
+                        ->update([
+                            'point_apel' => $deskripsiKegiatan
+                        ]);
+                }
             }
         }
-    }
 
-    return redirect()->to(base_url('admin/absensi'))->with('pesan', 'Data absensi berhasil disimpan!');
-}
+        return redirect()
+            ->to(base_url('admin/absensi'))
+            ->with(
+                'pesan',
+                'Data absensi berhasil disimpan!'
+            );
+    }
 
     public function hapus($id)
     {
         $presensiModel = new PresensiModel();
+
         $presensiModel->delete($id);
 
-        return redirect()->to(base_url('admin/absensi'))->with('pesan', 'Data absensi berhasil dihapus!');
+        return redirect()
+            ->to(base_url('admin/absensi'))
+            ->with(
+                'pesan',
+                'Data absensi berhasil dihapus!'
+            );
     }
 }

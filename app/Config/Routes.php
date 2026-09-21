@@ -194,12 +194,18 @@ $routes->group('absen-guru', ['filter' => 'permission:attendance.edit'], functio
        $routes->get('guru/print-single/(:any)', 'Admin\QRGenerator::printQrGuruSingle/$1');
     });
 
-   // ── Laporan (attendance.view) ──
-   $routes->group('laporan', ['filter' => 'permission:attendance.view'], function ($routes) {
-      $routes->get('/', 'Admin\GenerateLaporan::index');
-      $routes->post('siswa', 'Admin\GenerateLaporan::generateLaporanSiswa');
-      $routes->post('guru', 'Admin\GenerateLaporan::generateLaporanGuru');
-   });
+   // ── Laporan Personel (attendance.view) ──
+$routes->group('laporan', ['filter' => 'permission:attendance.view'], function ($routes) {
+
+    // Halaman Generate Laporan
+    $routes->get('/', 'Admin\GenerateLaporan::index');
+
+    // Generate PDF / DOC
+    $routes->post('generate', 'Admin\GenerateLaporan::generateLaporan');
+
+    // Kirim laporan melalui WhatsApp
+    $routes->post('kirim-wa', 'Admin\GenerateLaporan::kirimWhatsApp');
+});
 
    // ── Data Petugas (petugas.manage) ──
    $routes->group('petugas', ['filter' => 'permission:petugas.manage'], function ($routes) {

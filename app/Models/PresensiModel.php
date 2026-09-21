@@ -11,10 +11,12 @@ class PresensiModel extends Model
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useTimestamps    = true;
-    protected $allowedFields    = [
+
+    protected $allowedFields = [
         'personel_id',
         'waktu_masuk',
-        'status'
+        'status',
+        'point_apel'
     ];
 
     public function getAttendanceTrend($days = 7)
