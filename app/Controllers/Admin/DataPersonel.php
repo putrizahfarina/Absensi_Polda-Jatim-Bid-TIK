@@ -13,20 +13,42 @@ class DataPersonel extends BaseController
 
     public function __construct()
     {
-        // MENGGUNAKAN 'new' AGAR DIJAMIN TIDAK NULL
         $this->personelModel = new PersonelModel();
     }
 
+    // HALAMAN DATA PERSONEL
     public function index()
     {
-        $data = [
-            'title'            => 'Data Personel',
-            // Sekarang kita bisa pakai $this->personelModel dengan aman
-            'personel'         => $this->personelModel->findAll(),
-            'personelTerhapus' => $this->personelModel->onlyDeleted()->findAll()
-        ];
+        $personel = $this->personelModel->findAll();
 
-        return view('admin/data/data-personel', $data);
+        // Cek QR setiap personel.
+        // Jika path QR ada di database tetapi file fisiknya hilang,
+        // QR akan dibuat ulang otomatis.
+        foreach ($personel as &$p) {
+            $qrPath = $p['qr_code'] ?? '';
+
+            if (
+                !empty($p['nrp_nip']) &&
+                (
+                    empty($qrPath) ||
+                    !file_exists(FCPATH . $qrPath)
+                )
+            ) {
+                $newQrPath = $this->generateQRCode($p['nrp_nip']);
+
+                $this->personelModel->update($p['id'], [
+                    'qr_code' => $newQrPath
+                ]);
+
+                $p['qr_code'] = $newQrPath;
+            }
+        }
+
+        return view('admin/data/data-personel', [
+            'title'            => 'Data Personel',
+            'personel'         => $personel,
+            'personelTerhapus' => $this->personelModel->onlyDeleted()->findAll()
+        ]);
     }
 
     // SIMPAN DATA DARI MODAL TAMBAH
@@ -35,17 +57,18 @@ class DataPersonel extends BaseController
         $nrp = trim((string) $this->request->getPost('nrp_nip'));
 
         if (empty($nrp)) {
-            return redirect()->back()->withInput()->with('error', 'NRP/NIP Wajib diisi!');
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'NRP/NIP Wajib diisi!');
         }
 
-        // Validasi agar jika input kosong, otomatis diisi default 'Bid TIK'
         $satkerInput = trim((string) $this->request->getPost('satker'));
         $satker = !empty($satkerInput) ? $satkerInput : 'Bid TIK';
 
         // Generate QR Code
         $qrPath = $this->generateQRCode($nrp);
 
-        // Simpan data personel ke database
+        // Simpan data personel
         $saved = $this->personelModel->save([
             'nrp_nip'       => $nrp,
             'nama'          => trim((string) $this->request->getPost('nama')),
@@ -56,18 +79,26 @@ class DataPersonel extends BaseController
         ]);
 
         if ($saved) {
-            return redirect()->to('/admin/data-personel')->with('success', 'Data personel & QR Code berhasil disimpan.');
+            return redirect()->to('/admin/data-personel')
+                ->with('success', 'Data personel & QR Code berhasil disimpan.');
         }
 
-        return redirect()->back()->withInput()->with('error', 'Gagal menyimpan data personel.');
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'Gagal menyimpan data personel.');
     }
 
+    // HALAMAN IMPORT
     public function importView()
     {
-        $data = ['title' => 'Import Data Personel'];
+        $data = [
+            'title' => 'Import Data Personel'
+        ];
+
         return view('admin/data/import-personel', $data);
     }
 
+    // IMPORT DATA PERSONEL
     public function import()
     {
         $file = $this->request->getFile('file_excel');
@@ -76,15 +107,22 @@ class DataPersonel extends BaseController
             $ext = $file->getClientExtension();
 
             if ($ext === 'csv') {
-                $handle = fopen($file->getTempName(), "r");
+                $handle = fopen($file->getTempName(), 'r');
                 $row = 0;
 
-                while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                while (($data = fgetcsv($handle, 1000, ',')) !== false) {
                     $row++;
-                    if ($row == 1) continue; // Skip header
+
+                    // Skip header
+                    if ($row == 1) {
+                        continue;
+                    }
 
                     $nrp = trim($data[0] ?? '');
-                    if (empty($nrp)) continue;
+
+                    if (empty($nrp)) {
+                        continue;
+                    }
 
                     $qrPath = $this->generateQRCode($nrp);
                     $satkerCsv = trim($data[4] ?? '');
@@ -99,47 +137,66 @@ class DataPersonel extends BaseController
                         'qr_code'       => $qrPath,
                     ]);
                 }
+
                 fclose($handle);
-                // DIPERBAIKI: URL redirect dikembalikan ke /admin/data-personel
-                return redirect()->to('/admin/data-personel')->with('success', 'Data personel berhasil diimpor.');
+
+                return redirect()->to('/admin/data-personel')
+                    ->with('success', 'Data personel berhasil diimpor.');
             }
         }
 
-        return redirect()->back()->with('error', 'Gagal mengunggah file. Pastikan format file .csv');
+        return redirect()->back()
+            ->with('error', 'Gagal mengunggah file. Pastikan format file .csv');
     }
 
     // UPDATE DATA PERSONEL
     public function update($id)
     {
         $personel = $this->personelModel->find($id);
+
         if (!$personel) {
-            return redirect()->back()->with('error', 'Data personel tidak ditemukan.');
+            return redirect()->back()
+                ->with('error', 'Data personel tidak ditemukan.');
         }
 
         $nrp = trim((string) $this->request->getPost('nrp_nip'));
         $satkerInput = trim((string) $this->request->getPost('satker'));
 
-        // Jika form dikirim kosong/tidak diisi, pertahankan nilai lama dari database
-        $satker = !empty($satkerInput) ? $satkerInput : ($personel['satker'] ?? 'Bid TIK');
+        $satker = !empty($satkerInput)
+            ? $satkerInput
+            : ($personel['satker'] ?? 'Bid TIK');
 
-        // Jika NRP diubah, buat ulang QR Code-nya
+        // Jika NRP diubah, buat QR baru
         $qrPath = $personel['qr_code'];
+
         if (!empty($nrp) && $nrp !== $personel['nrp_nip']) {
-            if (!empty($personel['qr_code']) && file_exists(FCPATH . $personel['qr_code'])) {
+            if (
+                !empty($personel['qr_code']) &&
+                file_exists(FCPATH . $personel['qr_code'])
+            ) {
                 @unlink(FCPATH . $personel['qr_code']);
             }
+
             $qrPath = $this->generateQRCode($nrp);
         }
 
         $this->personelModel->update($id, [
-            'nrp_nip' => !empty($nrp) ? $nrp : $personel['nrp_nip'],
-            'nama'    => trim((string) $this->request->getPost('nama')) ?: $personel['nama'],
-            'pangkat' => trim((string) $this->request->getPost('pangkat')) ?: $personel['pangkat'],
-            'satker'  => $satker,
+            'nrp_nip' => !empty($nrp)
+                ? $nrp
+                : $personel['nrp_nip'],
+
+            'nama' => trim((string) $this->request->getPost('nama'))
+                ?: $personel['nama'],
+
+            'pangkat' => trim((string) $this->request->getPost('pangkat'))
+                ?: $personel['pangkat'],
+
+            'satker' => $satker,
             'qr_code' => $qrPath,
         ]);
 
-        return redirect()->to('/admin/data-personel')->with('success', 'Data personel berhasil diperbarui.');
+        return redirect()->to('/admin/data-personel')
+            ->with('success', 'Data personel berhasil diperbarui.');
     }
 
     // HAPUS DATA PERSONEL (SOFT DELETE)
@@ -148,27 +205,68 @@ class DataPersonel extends BaseController
         $this->personelModel->delete($id);
 
         return redirect()->to('/admin/data-personel')
-                         ->with('success', 'Data personel berhasil dipindahkan ke Data Terhapus.')
-                         ->with('open_modal_sampah', true);
+            ->with('success', 'Data personel berhasil dipindahkan ke Data Terhapus.')
+            ->with('open_modal_sampah', true);
     }
 
     // RESTORE DATA PERSONEL
     public function restore($id)
     {
-        // Mengembalikan data terhapus dengan mengosongkan kolom deleted_at
-        $this->personelModel->builder()->where('id', $id)->update(['deleted_at' => null]);
+        $this->personelModel
+            ->builder()
+            ->where('id', $id)
+            ->update(['deleted_at' => null]);
 
         return redirect()->to('/admin/data-personel')
-                         ->with('success', 'Data personel berhasil dipulihkan ke tabel utama.');
+            ->with('success', 'Data personel berhasil dipulihkan ke tabel utama.');
     }
 
+    // REGENERATE QR CODE
+    public function regenerateQR($id)
+    {
+        $personel = $this->personelModel->find($id);
+
+        if (!$personel) {
+            return redirect()->back()
+                ->with('error', 'Data personel tidak ditemukan.');
+        }
+
+        $nrp = trim((string) $personel['nrp_nip']);
+
+        if (empty($nrp)) {
+            return redirect()->back()
+                ->with('error', 'NRP personel tidak ditemukan.');
+        }
+
+        if (
+            !empty($personel['qr_code']) &&
+            file_exists(FCPATH . $personel['qr_code'])
+        ) {
+            @unlink(FCPATH . $personel['qr_code']);
+        }
+
+        $qrPath = $this->generateQRCode($nrp);
+
+        $this->personelModel->update($id, [
+            'qr_code' => $qrPath
+        ]);
+
+        return redirect()->to('/admin/data-personel')
+            ->with('success', 'QR Code berhasil dibuat ulang.');
+    }
+
+    // GENERATE QR CODE
     private function generateQRCode($nrp)
     {
         $writer = new PngWriter();
-        $qrCode = QrCode::create($nrp)->setSize(200);
+
+        $qrCode = QrCode::create($nrp)
+            ->setSize(200);
+
         $result = $writer->write($qrCode);
 
         $fileName = 'qr_' . $nrp . '.png';
+
         $uploadDir = FCPATH . 'uploads/qr_personel/';
 
         if (!is_dir($uploadDir)) {
@@ -176,6 +274,7 @@ class DataPersonel extends BaseController
         }
 
         $result->saveToFile($uploadDir . $fileName);
+
         return 'uploads/qr_personel/' . $fileName;
     }
 }

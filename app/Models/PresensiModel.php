@@ -15,6 +15,7 @@ class PresensiModel extends Model
     protected $allowedFields = [
         'personel_id',
         'waktu_masuk',
+        'waktu_pulang',
         'status',
         'point_apel'
     ];

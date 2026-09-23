@@ -36,12 +36,23 @@ $routes->get('/', function () {
    return redirect()->to(base_url('admin'));
 });
 
-// ── Scan (public after login) ──
+// ── Scan Absensi ──
 $routes->group('scan', function (RouteCollection $routes) {
-   $routes->get('', 'Scan::index');
-   $routes->get('masuk', 'Scan::index/Masuk');
-   $routes->get('pulang', 'Scan::index/Pulang');
-   $routes->post('cek', 'Scan::cekKode');
+
+    // Halaman scan absen masuk
+    $routes->get('', 'Scan::index');
+
+    // Halaman scan absen masuk
+    $routes->get('masuk', 'Scan::index');
+
+    // Halaman scan absen pulang
+    $routes->get('pulang', 'Scan::pulang');
+
+    // Proses absen masuk
+    $routes->post('prosesScan', 'Scan::prosesScan');
+
+    // Proses absen pulang
+    $routes->post('prosesScanPulang', 'Scan::prosesScanPulang');
 });
 
 // Perizinan Publik
@@ -272,17 +283,14 @@ if (is_file(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
  * @var RouteCollection $routes
  */
 
-// Halaman Absensi Scanner
-$routes->get('scan', 'Scan::index');
-$routes->post('scan/proses', 'Scan::prosesScan');
-
 // Halaman Administrasi Personel
 $routes->group('admin', static function ($routes) {
     $routes->get('data-personel', 'Admin\DataPersonel::index');
     $routes->post('data-personel/store', 'Admin\DataPersonel::store');
     $routes->post('data-personel/update/(:num)', 'Admin\DataPersonel::update/$1'); // Route Edit Data
     $routes->get('data-personel/delete/(:num)', 'Admin\DataPersonel::delete/$1');  // Route Hapus Data
-    
+    $routes->get('data-personel/regenerate-qr/(:num)', 'Admin\DataPersonel::regenerateQR/$1');
+    $routes->get('data-personel/test-qr', 'Admin\DataPersonel::testQR');
     // Alias agar URL /admin/siswa tidak 404
     $routes->get('siswa', 'Admin\DataPersonel::index');
 

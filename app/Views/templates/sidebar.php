@@ -62,7 +62,6 @@ $adminMenus = [
    ['title' => 'Hari Libur', 'url' => 'admin/holiday', 'icon' => 'event_busy', 'context' => 'holiday', 'perm' => 'settings.manage'],
    ['title' => 'Data Personel', 'url' => 'admin/data-personel', 'icon' => 'person', 'context' => 'siswa', 'perm' => 'students.manage'],
    ['title' => 'Data Kelas & Jurusan', 'url' => 'admin/kelas', 'icon' => 'school', 'context' => 'kelas', 'perm' => 'classes.manage'],
-   ['title' => 'Generate QR Code', 'url' => 'admin/generate', 'icon' => 'qr_code', 'context' => 'admin-qr', 'perm' => 'qr.generate'],
    ['title' => 'Generate Laporan', 'url' => 'admin/laporan', 'icon' => 'print', 'context' => 'laporan', 'perm' => 'attendance.view'],
    ['title' => 'Data Petugas', 'url' => 'admin/petugas', 'icon' => 'computer', 'context' => 'petugas', 'perm' => 'petugas.manage'],
    ['title' => 'Pengaturan', 'url' => 'admin/general-settings', 'icon' => 'settings', 'context' => 'general_settings', 'perm' => 'settings.manage'],
