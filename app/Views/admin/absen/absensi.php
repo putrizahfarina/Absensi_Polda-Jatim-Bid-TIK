@@ -78,9 +78,9 @@
                          * Jika belum memiliki status hari ini,
                          * default diarahkan ke HADIR.
                          */
-                        $def_status = isset($p['status_hari_ini'])
+                       $def_status = isset($p['status_hari_ini'])
                             ? strtoupper(trim($p['status_hari_ini']))
-                            : 'HADIR';
+                            : '';
                         ?>
 
                         <tr>

@@ -213,27 +213,18 @@
       transition: all 0.25s ease;
    }
 
-   /* BUTTON LOGIN */
-   .login-btn-primary {
-      color: #ffffff;
+/* BUTTON LOGIN */
+.login-btn-primary{
+    color:#ffffff;
+    background:linear-gradient(135deg,#7b1113,#b32025);
+    box-shadow:0 8px 20px rgba(120,0,0,.30);
+}
 
-      background: linear-gradient(
-         135deg,
-         #071a3d,
-         #0d3b78
-      );
-
-      box-shadow:
-         0 8px 20px rgba(0, 20, 60, 0.40);
-   }
-
-   .login-btn-primary:hover {
-      color: #ffffff;
-      transform: translateY(-2px);
-
-      box-shadow:
-         0 12px 25px rgba(0, 20, 60, 0.55);
-   }
+.login-btn-primary:hover{
+    color:#ffffff;
+    background:linear-gradient(135deg,#8f1619,#c62828);
+    transform:translateY(-2px);
+}
 
    /* GARIS PEMISAH */
    .login-separator {
@@ -256,44 +247,42 @@
       background: rgba(255, 255, 255, 0.25);
    }
 
-   /* BUTTON IZIN */
-   .login-btn-izin {
-      color: #ffffff;
 
-      background: rgba(7, 45, 90, 0.80);
+/* BUTTON AJUKAN IZIN */
+.login-btn-izin{
+    color:#ffffff;
+    background:#111111;
+    border:1px solid #2a2a2a;
+    box-shadow:0 7px 18px rgba(0,0,0,.30);
+}
 
-      border: 1px solid rgba(255, 255, 255, 0.20);
+.login-btn-izin:hover{
+    color:#ffffff;
+    background:#000000;
+    border:1px solid #3a3a3a;
+    transform:translateY(-2px);
+}
 
-      margin-bottom: 10px;
-   }
+/* BUTTON CEK KEHADIRAN */
+.login-btn-kehadiran,
+.login-btn-kehadiran:link,
+.login-btn-kehadiran:visited{
+    background: linear-gradient(135deg,#7b1113,#b32025);
+    color:#ffffff !important;
+    border:none;
+    box-shadow:0 7px 18px rgba(120,0,0,.30);
+    text-decoration:none;
+}
 
-   .login-btn-izin:hover {
-      color: #ffffff;
-      background: rgba(10, 60, 115, 0.95);
-      transform: translateY(-2px);
-   }
+.login-btn-kehadiran:hover{
+    background: linear-gradient(135deg,#8f1619,#c62828);
+    color:#ffffff !important;
+    transform:translateY(-2px);
+}
 
-   /* BUTTON CEK KEHADIRAN */
-   .login-btn-kehadiran {
-      color: #ffffff;
-
-      background: linear-gradient(
-         135deg,
-         #7b1113,
-         #b32025
-      );
-
-      box-shadow:
-         0 7px 18px rgba(120, 0, 0, 0.30);
-   }
-
-   .login-btn-kehadiran:hover {
-      color: #ffffff;
-      transform: translateY(-2px);
-
-      box-shadow:
-         0 10px 22px rgba(120, 0, 0, 0.45);
-   }
+.login-btn-kehadiran i{
+    color:#ffffff !important;
+}
 
    /* FOOTER */
    .login-footer {
@@ -364,9 +353,10 @@
 
             <div class="login-divider"></div>
 
-            <!-- LOGO POLDA JATIM -->
-            <img
-               <img src="<?= base_url('assets/img/logo_bid_TIK_POLDA.jpg') ?>" alt="Logo Bid TIK" class="login-logo">
+           <img
+               src="<?= base_url('assets/img/LOGO_POLDA_JATIM.png') ?>"
+               alt="Logo Polda Jawa Timur"
+               class="login-logo">
 
          </div>
 
@@ -520,11 +510,9 @@
             </a>
 
 
-            <!-- CEK KEHADIRAN -->
-            <a
-               href="<?= base_url('cek-kehadiran') ?>"
-               class="login-btn login-btn-kehadiran">
-
+<a href="<?= base_url('cek-kehadiran') ?>"
+   class="login-btn login-btn-kehadiran"
+   style="margin-top:12px;">
                <i class="material-icons">
                   visibility
                </i>

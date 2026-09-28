@@ -2,19 +2,19 @@
 
 namespace App\Controllers;
 
-use App\Models\SiswaModel;
-use App\Models\PresensiSiswaModel;
-use CodeIgniter\I18n\Time;
+use App\Models\PersonelModel;
+use App\Models\PresensiModel;
 
 class CekKehadiran extends BaseController
 {
-    protected $siswaModel;
-    protected $presensiSiswaModel;
+    protected $personelModel;
+    protected $presensiModel;
 
     public function __construct()
     {
-        $this->siswaModel = new SiswaModel();
-        $this->presensiSiswaModel = new PresensiSiswaModel();
+        $this->personelModel = new PersonelModel();
+        $this->presensiModel = new PresensiModel();
+
         helper(['form', 'url']);
     }
 
@@ -27,48 +27,83 @@ class CekKehadiran extends BaseController
 
     public function view()
     {
-        $nis = request()->getPost('nis');
-        $no_hp = request()->getPost('no_hp');
+        $nrpNip = trim($this->request->getPost('nrp_nip'));
 
-        // Validasi identitas
-        $siswa = $this->siswaModel->where(['nis' => $nis, 'no_hp' => $no_hp])->first();
-
-        if (!$siswa) {
-            return redirect()->back()->with('error', 'Kombinasi NIS dan Nomor HP tidak cocok.');
+        if (empty($nrpNip)) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'NRP/NIP wajib diisi.');
         }
 
-        // Ambil data presensi tahun ini untuk DataTables
+        // Cari personel berdasarkan NRP/NIP
+        $personel = $this->personelModel
+            ->where('nrp_nip', $nrpNip)
+            ->first();
+
+        if (!$personel) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Data personel dengan NRP/NIP tersebut tidak ditemukan.'
+                );
+        }
+
+        // Ambil presensi personel pada tahun berjalan
         $year = date('Y');
-        
-        $history = $this->presensiSiswaModel
-            ->where('id_siswa', $siswa['id_siswa'])
-            ->where('YEAR(tanggal)', $year)
-            ->orderBy('tanggal', 'DESC')
+
+        $history = $this->presensiModel
+            ->where('personel_id', $personel['id'])
+            ->where(
+                'waktu_masuk >=',
+                $year . '-01-01 00:00:00'
+            )
+            ->where(
+                'waktu_masuk <=',
+                $year . '-12-31 23:59:59'
+            )
+            ->orderBy('waktu_masuk', 'DESC')
             ->findAll();
 
-        // Hitung Summary (Bulan Berjalan)
+        // Statistik bulan berjalan
         $month = date('m');
+
         $stats = [
             'hadir' => 0,
             'sakit' => 0,
-            'izin' => 0,
-            'alfa' => 0
+            'izin'  => 0,
+            'alfa'  => 0
         ];
 
-        foreach ($history as $h) {
-            if (date('m', strtotime($h['tanggal'])) == $month) {
-                if ($h['id_kehadiran'] == 1) $stats['hadir']++;
-                elseif ($h['id_kehadiran'] == 2) $stats['sakit']++;
-                elseif ($h['id_kehadiran'] == 3) $stats['izin']++;
-                elseif ($h['id_kehadiran'] == 4) $stats['alfa']++;
+        foreach ($history as $item) {
+
+            if (
+                empty($item['waktu_masuk']) ||
+                date('m', strtotime($item['waktu_masuk'])) != $month
+            ) {
+                continue;
+            }
+
+            $status = strtolower($item['status'] ?? '');
+
+            if ($status === 'hadir') {
+                $stats['hadir']++;
+            } elseif ($status === 'sakit') {
+                $stats['sakit']++;
+            } elseif ($status === 'izin') {
+                $stats['izin']++;
+            } elseif ($status === 'alfa') {
+                $stats['alfa']++;
             }
         }
 
         return view('cek_kehadiran/hasil', [
-            'title' => 'Riwayat Kehadiran: ' . $siswa['nama_siswa'],
-            'siswa' => $siswa,
-            'history' => $history,
-            'stats' => $stats,
+            'title'     => 'Riwayat Kehadiran',
+            'personel'  => $personel,
+            'history'   => $history,
+            'stats'     => $stats,
             'monthName' => date('F Y')
         ]);
     }

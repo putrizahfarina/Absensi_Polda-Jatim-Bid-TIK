@@ -2,18 +2,18 @@
 
 namespace App\Controllers;
 
-use App\Models\SiswaModel;
+use App\Models\PersonelModel;
 use App\Models\PerizinanModel;
 use CodeIgniter\I18n\Time;
 
 class Perizinan extends BaseController
 {
-    protected $siswaModel;
+    protected $personelModel;
     protected $perizinanModel;
 
     public function __construct()
     {
-        $this->siswaModel = new SiswaModel();
+        $this->personelModel = new PersonelModel();
         $this->perizinanModel = new PerizinanModel();
         helper(['form', 'url']);
     }
@@ -23,6 +23,7 @@ class Perizinan extends BaseController
         $data = [
             'title' => 'Pengajuan Izin/Sakit Digital',
         ];
+
         return view('perizinan/form_pengajuan', $data);
     }
 
@@ -34,23 +35,25 @@ class Perizinan extends BaseController
         if ($type === 'guru') {
             $guruModel = new \App\Models\GuruModel();
             $result = $guruModel->where('nuptk', $id_number)->first();
+
             if ($result) {
                 return $this->response->setJSON([
                     'status' => 'success',
                     'data' => [
-                        'id' => $result['id_guru'],
+                        'id'   => $result['id_guru'],
                         'nama' => $result['nama_guru'],
                     ]
                 ]);
             }
         } else {
-            $siswa = $this->siswaModel->where('nis', $id_number)->first();
-            if ($siswa) {
+            $personel = $this->personelModel->where('nrp', $id_number)->first();
+
+            if ($personel) {
                 return $this->response->setJSON([
                     'status' => 'success',
                     'data' => [
-                        'id' => $siswa['id_siswa'],
-                        'nama' => $siswa['nama_siswa'],
+                        'id'   => $personel['id_personel'],
+                        'nama' => $personel['nama_personel'],
                     ]
                 ]);
             }
@@ -58,24 +61,29 @@ class Perizinan extends BaseController
 
         return $this->response->setJSON([
             'status' => 'error',
-            'message' => ($type === 'guru' ? 'Guru dengan NUPTK' : 'Siswa dengan NIS') . ' tersebut tidak ditemukan.'
+            'message' => ($type === 'guru'
+                ? 'Guru dengan NUPTK'
+                : 'Personel dengan NRP') . ' tersebut tidak ditemukan.'
         ]);
     }
 
     public function submit()
     {
         $type = request()->getPost('type');
+
         $validationRules = [
-            'id_target' => 'required',
-            'tanggal_mulai' => 'required|valid_date',
-            'tanggal_selesai' => 'required|valid_date',
-            'tipe_izin' => 'required|in_list[Sakit,Izin]',
-            'alasan' => 'required',
-            'bukti' => 'uploaded[bukti]|max_size[bukti,2048]|is_image[bukti]|mime_in[bukti,image/jpg,image/jpeg,image/png]',
+            'id_target'         => 'required',
+            'tanggal_mulai'     => 'required|valid_date',
+            'tanggal_selesai'   => 'required|valid_date',
+            'tipe_izin'         => 'required|in_list[Sakit,Izin]',
+            'alasan'            => 'required',
+            'bukti'             => 'uploaded[bukti]|max_size[bukti,2048]|is_image[bukti]|mime_in[bukti,image/jpg,image/jpeg,image/png]',
         ];
 
         if (!$this->validate($validationRules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', $this->validator->getErrors());
         }
 
         $file = request()->getFile('bukti');
@@ -83,22 +91,23 @@ class Perizinan extends BaseController
         $file->move(FCPATH . 'uploads/perizinan', $newName);
 
         $data = [
-            'tanggal_mulai' => request()->getPost('tanggal_mulai'),
+            'tanggal_mulai'   => request()->getPost('tanggal_mulai'),
             'tanggal_selesai' => request()->getPost('tanggal_selesai'),
-            'tipe_izin' => request()->getPost('tipe_izin'),
-            'alasan' => request()->getPost('alasan'),
-            'bukti' => $newName,
-            'status' => 'Pending',
+            'tipe_izin'       => request()->getPost('tipe_izin'),
+            'alasan'          => request()->getPost('alasan'),
+            'bukti'           => $newName,
+            'status'          => 'Pending',
         ];
 
         if ($type === 'guru') {
             $data['id_guru'] = request()->getPost('id_target');
         } else {
-            $data['id_siswa'] = request()->getPost('id_target');
+            $data['id_personel'] = request()->getPost('id_target');
         }
 
         $this->perizinanModel->insert($data);
 
-        return redirect()->to(base_url('izin'))->with('success', 'Pengajuan izin berhasil dikirim. Silakan tunggu konfirmasi dari Admin.');
+        return redirect()->to(base_url('izin'))
+            ->with('success', 'Pengajuan izin berhasil dikirim. Silakan tunggu konfirmasi dari Admin.');
     }
 }

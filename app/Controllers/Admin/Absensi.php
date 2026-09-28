@@ -27,6 +27,22 @@ class Absensi extends BaseController
             ->where('DATE(presensi.waktu_masuk)', $hariIni)
             ->findAll();
 
+            // Hubungkan status absensi hari ini dengan masing-masing personel
+$statusMap = [];
+
+foreach ($absensiHariIni as $absen) {
+    $statusMap[$absen['personel_id']] = strtoupper(
+        trim($absen['status'] ?? '')
+    );
+}
+
+foreach ($dataPersonel as &$personel) {
+    $personel['status_hari_ini'] =
+        $statusMap[$personel['id']] ?? null;
+}
+
+unset($personel);
+
         $totalPersonel = count($dataPersonel);
         $totalTercatat = count($absensiHariIni);
         $totalBelum    = max(0, $totalPersonel - $totalTercatat);
