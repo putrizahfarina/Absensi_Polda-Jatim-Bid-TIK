@@ -928,11 +928,11 @@
             </div>
 
             <div class="polda-kpi-title">
-                Dinas
+                Dinas Luar
             </div>
 
             <div class="polda-kpi-value">
-                <?= $totalDinas ?? 0; ?>
+                <?= $totalDinasLuar ?? 0; ?>
             </div>
 
         </div>
@@ -1235,7 +1235,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const labels = [
         "HADIR",
-        "DINAS",
+        "DINAS LUAR",
         "LEPAS DINAS",
         "CUTI",
         "SAKIT",
@@ -1254,7 +1254,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         <?= (int) ($totalHadir ?? 0) ?>,
 
-        <?= (int) ($totalDinas ?? 0) ?>,
+        <?= (int) ($totalDinasLuar ?? 0) ?>,
 
         <?= (int) ($totalLepasDinas ?? 0) ?>,
 

@@ -4,7 +4,7 @@
 <!-- CDN FontAwesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<!-- Style Perbaikan Z-Index Modal & Placeholder -->
+<!-- Style Perbaikan Z-Index Modal, Placeholder & Zebra Striping -->
 <style>
     #searchInput::placeholder {
         color: #ffffff !important;
@@ -15,6 +15,56 @@
     }
     .modal-backdrop {
         z-index: 1050 !important;
+    }
+
+    /* Tabel Dark Mode Data Personel */
+    .table-personel-dark {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #e2e8f0;
+    }
+
+    /* Header Tabel */
+    .table-personel-dark thead th {
+        background-color: #1e293b !important; /* Navy sangat gelap */
+        color: #ffffff !important;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        padding: 14px 20px;
+        border-bottom: 2px solid #1e293b;
+    }
+
+    /* Paksa Reset Background Tabel & Baris */
+    .table-personel-dark,
+    .table-personel-dark tbody,
+    .table-personel-dark tbody tr {
+        background-color: transparent !important;
+    }
+
+    /* Zebra Striping (Baris Ganjil - Gelap Utama) */
+    .table-personel-dark tbody tr:nth-child(odd) td {
+        background-color: #0f172a !important; 
+        color: #f8fafc !important;
+    }
+
+    /* Zebra Striping (Baris Genap - Agak Cerah/Terang) */
+    .table-personel-dark tbody tr:nth-child(even) td {
+        background-color: #1e293b !important; 
+        color: #f8fafc !important;
+    }
+
+    /* Hover Effect saat kursor di atas baris */
+    .table-personel-dark tbody tr:hover td {
+        background-color: #334155 !important;
+    }
+
+    .table-personel-dark tbody td {
+        padding: 14px 20px;
+        vertical-align: middle;
+        font-size: 0.875rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 </style>
 
@@ -86,42 +136,67 @@
                 <select id="urFilterSelect" style="width: 100%; background: #0f172a !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; border-radius: 6px; padding: 10px 14px; color: #ffffff !important; font-size: 13px; outline: none; cursor: pointer; box-sizing: border-box;">
                     <option value="">Semua UR</option>
                     <option value="URMINTU">URMINTU</option>
-                    <option value="URRES">URRES</option>
-                    <option value="URSABHARA">URSABHARA</option>
-                    <option value="BID TIK">BID TIK</option>
+                    <option value="URREN">URREN</option>
+                    <option value="URKEU">URKEU</option>
+                    <option value="URPULLAHTA">URPULLAHTA</option>
+                    <option value="URINTI">URINTI</option>
+                    <option value="URYANDUKNIS">URYANDUKNIS</option>
+                    <option value="URJARKOM">URJARKOM</option>
+                    <option value="URYANKOM">URYANKOM</option>
+                    <option value="URHARKAN">URHARKAN</option>
                 </select>
             </div>
         </div>
     </div>
 
-    <!-- Tabel Data -->
+    <!-- Tabel Data dengan Class Dark Zebra Striping -->
     <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; overflow: hidden;">
         <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+            <table class="table-personel-dark">
                 <thead>
-                    <tr style="background: rgba(30, 41, 59, 0.9); border-bottom: 1px solid rgba(245, 244, 244, 0.1);">
-                        <th style="padding: 14px 20px; color: #ffffff; font-size: 12px; font-weight: 600; width: 60px;">NO</th>
-                        <th style="padding: 14px 20px; color: #ffffff; font-size: 12px; font-weight: 600;">NRP</th>
-                        <th style="padding: 14px 20px; color: #ffffff; font-size: 12px; font-weight: 600;">NAMA</th>
-                        <th style="padding: 14px 20px; color: #ffffff; font-size: 12px; font-weight: 600;">PANGKAT</th>
-                        <th style="padding: 14px 20px; color: #ffffff; font-size: 12px; font-weight: 600;">UR</th>
-                        <th style="padding: 14px 20px; color: #ffffff; font-size: 12px; font-weight: 600; text-align: right;">AKSI</th>
+                    <tr>
+                        <th style="width: 60px;">NO</th>
+                        <th>NAMA</th>
+                        <th>PANGKAT</th>
+                        <th>NRP</th>
+                        <th>SUBBID</th>
+                        <th>UR</th>
+                        <th style="width: 100px; text-align: left;">AKSI</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($personel)): ?>
                         <?php $no = 1; foreach ($personel as $p): ?>
-                            <tr class="personel-row-item" data-ur="<?= esc($p['satker'] ?? ''); ?>" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                <td style="padding: 16px 20px; color: #64748b;"><?= $no++; ?></td>
-                                <td class="nrp-val" style="padding: 16px 20px; color: #ffffff; font-weight: 600;"><?= esc($p['nrp_nip']); ?></td>
-                                <td class="nama-val" style="padding: 16px 20px; color: #ffffff; font-weight: 600;"><?= esc($p['nama']); ?></td>
-                                <td class="pangkat-val" style="padding: 16px 20px; color: #94a3b8;"><?= esc($p['pangkat']); ?></td>
-                                <td style="padding: 16px 20px;">
+                            <tr class="personel-row-item" data-ur="<?= esc($p['ur'] ?? $p['satker'] ?? ''); ?>">
+                                
+                                <!-- 1. NO -->
+                                <td style="color: #64748b;"><?= $no++; ?></td>
+                                
+                                <!-- 2. NAMA -->
+                                <td class="nama-val" style="font-weight: 600;"><?= esc($p['nama']); ?></td>
+                                
+                                <!-- 3. PANGKAT -->
+                                <td class="pangkat-val" style="color: #94a3b8;"><?= esc($p['pangkat']); ?></td>
+                                
+                                <!-- 4. NRP -->
+                                <td class="nrp-val" style="font-weight: 600;"><?= esc($p['nrp_nip']); ?></td>
+                                
+                                <!-- 5. SUBBID -->
+                                <td>
                                     <span style="background: rgba(255, 255, 255, 0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 4px; font-size: 11px;">
-                                        <?= esc($p['satker'] ?? 'URMINTU'); ?>
+                                        <?= esc($p['subbid'] ?? '—'); ?>
                                     </span>
                                 </td>
-                                <td style="padding: 16px 20px; text-align: right;">
+                                
+                                <!-- 6. UR -->
+                                <td>
+                                    <span style="background: rgba(255, 255, 255, 0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 4px; font-size: 11px;">
+                                        <?= esc($p['ur'] ?? $p['satker'] ?? '—'); ?>
+                                    </span>
+                                </td>
+                                
+                                <!-- 7. AKSI -->
+                                <td style="text-align: right;">
                                     <div style="display: flex; justify-content: flex-end; align-items: center; gap: 14px;">
                                         <button type="button" 
                                                 style="background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 0; font-size: 16px; outline: none;" 
@@ -155,14 +230,14 @@
                         <?php endforeach; ?>
 
                         <tr id="noMatchRow" style="display: none;">
-                            <td colspan="6" style="text-align: center; color: #64748b; padding: 48px; font-size: 14px;">
+                            <td colspan="7" style="text-align: center; color: #64748b; padding: 48px; font-size: 14px;">
                                 <i class="fas fa-search-minus mb-2" style="font-size: 24px; display: block; color: #475569;"></i>
                                 Tidak ada data personel yang cocok dengan kata kunci atau filter Anda.
                             </td>
                         </tr>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" style="text-align: center; color: #64748b; padding: 48px; font-size: 14px;">Belum ada data personel terdaftar</td>
+                            <td colspan="7" style="text-align: center; color: #64748b; padding: 48px; font-size: 14px;">Belum ada data personel terdaftar</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -206,7 +281,7 @@
 
         <!-- MODAL EDIT PERSONEL -->
         <div class="modal fade" id="modalEdit<?= $p['id']; ?>" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 500px;">
+            <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 600px;">
                 <div class="modal-content" style="border-radius: 16px; border: none; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); background-color: #ffffff;">
                     <div class="modal-header border-0 pt-4 px-4 pb-2" style="background: #ffffff; position: relative;">
                         <div>
@@ -228,21 +303,44 @@
                                 <label class="font-weight-bold mb-1" style="font-size: 13px; color: #0f172a !important; display: block;">Nama Lengkap</label>
                                 <input type="text" name="nama" class="form-control px-3 py-2" value="<?= esc($p['nama']); ?>" required style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; color: #0f172a !important; background: #ffffff !important; width: 100%; box-sizing: border-box;">
                             </div>
+                            
                             <div style="display: flex; gap: 12px;" class="mb-3">
                                 <div style="flex: 1;">
                                     <label class="font-weight-bold mb-1" style="font-size: 13px; color: #0f172a !important; display: block;">Pangkat</label>
                                     <select name="pangkat" class="form-control px-3" required style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; height: 42px; color: #0f172a !important; background: #ffffff !important; width: 100%; box-sizing: border-box;">
                                         <?php 
                                             $pangkats = ['BRIPDA', 'BRIPTU', 'BRIPKA', 'AIPDA', 'AIPTU', 'IPDA', 'IPTU', 'AKP', 'KOMPOL', 'AKBP', 'KOMBES POL'];
-                                            foreach($pangkats as $pkt):
+                                            foreach($pangkats as$pkt):
                                         ?>
-                                            <option value="<?= $pkt; ?>" <?= ($p['pangkat'] == $pkt) ? 'selected' : ''; ?>><?= $pkt; ?></option>
+                                            <option value="<?= $pkt; ?>" <?= ($p['pangkat'] == $pkt) ? 'selected' : ''; ?>><?=$pkt; ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
+                                
+                                <div style="flex: 1;">
+                                    <label class="font-weight-bold mb-1" style="font-size: 13px; color: #0f172a !important; display: block;">Subbid</label>
+                                    <select name="subbid" class="form-control px-3" required style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; height: 42px; color: #0f172a !important; background: #ffffff !important; width: 100%; box-sizing: border-box;">
+                                        <option value="" disabled <?= empty($p['subbid']) ? 'selected' : ''; ?>>Pilih Subbid</option>
+                                        <?php 
+                                            $subbids = ['SUBBAGRENMIN', 'SUBBIDTEKINFO', 'SUBBIDTEKKOM'];
+                                            foreach($subbids as$sb):
+                                        ?>
+                                            <option value="<?= $sb; ?>" <?= (($p['subbid'] ?? '') == $sb) ? 'selected' : ''; ?>><?=$sb; ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
                                 <div style="flex: 1;">
                                     <label class="font-weight-bold mb-1" style="font-size: 13px; color: #0f172a !important; display: block;">UR</label>
-                                    <input type="text" name="satker" class="form-control px-3 py-2" value="<?= esc($p['satker']); ?>" required style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; color: #0f172a !important; background: #ffffff !important; width: 100%; box-sizing: border-box;">
+                                    <select name="ur" class="form-control px-3" required style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; height: 42px; color: #0f172a !important; background: #ffffff !important; width: 100%; box-sizing: border-box;">
+                                        <option value="" disabled <?= empty($p['ur']) && empty($p['satker']) ? 'selected' : ''; ?>>Pilih UR</option>
+                                        <?php 
+                                            $urs = ['URMINTU', 'URREN', 'URKEU', 'URPULLAHTA', 'URINTI', 'URYANDUKNIS', 'URJARKOM', 'URYANKOM', 'URHARKAN'];$currentUr = $p['ur'] ?? $p['satker'] ?? '';
+                                            foreach($urs as$u):
+                                        ?>
+                                            <option value="<?= $u; ?>" <?= ($currentUr == $u) ? 'selected' : ''; ?>><?=$u; ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -276,55 +374,59 @@
                 </button>
             </div>
             
-            <div class="modal-body px-4 py-3">
-                <div style="max-height: 380px; overflow-y: auto;">
-                    <table class="table table-hover align-middle" style="font-size: 14px; width: 100%;">
-                        <thead>
-                            <tr style="background: #f8fafc; color: #64748b;">
-                                <th>NRP</th>
-                                <th>NAMA</th>
-                                <th>PANGKAT</th>
-                                <th>UR</th>
-                                <th style="text-align: right;">AKSI</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php 
-                            $personelTerhapus = (new \App\Models\PersonelModel())->onlyDeleted()->findAll();
-                            if (!empty($personelTerhapus)): 
-                                foreach ($personelTerhapus as $pt): 
-                            ?>
-                                <tr>
-                                    <td class="font-weight-bold" style="color: #0f172a;"><?= esc($pt['nrp_nip']); ?></td>
-                                    <td style="color: #0f172a;"><?= esc($pt['nama']); ?></td>
-                                    <td style="color: #64748b;"><?= esc($pt['pangkat']); ?></td>
-                                    <td>
-                                        <span class="badge bg-secondary px-2 py-1" style="font-size: 11px; text-transform: uppercase; border-radius: 4px;">
-                                            <?= esc($pt['ur'] ?? $pt['ur_nama'] ?? $pt['satker'] ?? '-'); ?>
-                                        </span>
-                                    </td>
-                                    <td style="text-align: right;">
-                                        <button type="button" 
-                                                class="btn btn-sm btn-success px-3 py-1 btn-pulihkan-data" 
-                                                data-url="<?= base_url('admin/data-personel/restore/' . $pt['id']); ?>" 
-                                                data-nama="<?= esc($pt['nama'] ?? ''); ?>"
-                                                style="border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;">
-                                            <i class="fas fa-rotate-left"></i> Pulihkan
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php 
-                                endforeach; 
-                            else: 
-                            ?>
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">Tidak ada data yang sedang disembunyikan.</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                    <div class="table-responsive px-4">
+            <table class="table align-middle" style="width: 100%;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 12px; font-weight: 700;">
+                        <th class="py-2" style="width: 80px;">NRP</th>
+                        <th class="py-2">NAMA</th>
+                        <th class="py-2">PANGKAT</th>
+                        <th class="py-2">SUBBID</th>
+                        <th class="py-2">UR</th>
+                        <th class="py-2 text-end" style="text-align: right;">AKSI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    $personelTerhapus = (new \App\Models\PersonelModel())->onlyDeleted()->findAll();
+                    if (!empty($personelTerhapus)): 
+                        foreach ($personelTerhapus as $pt): 
+                    ?>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td class="font-weight-bold py-3" style="color: #0f172a;"><?= esc($pt['nrp_nip']); ?></td>
+                            <td style="color: #0f172a; font-weight: 600;"><?= esc($pt['nama']); ?></td>
+                            <td style="color: #64748b;"><?= esc($pt['pangkat']); ?></td>
+                            <td>
+                                <span class="badge bg-light text-dark border px-2 py-1" style="font-size: 11px; text-transform: uppercase; border-radius: 4px;">
+                                    <?= esc($pt['subbid'] ?? '—'); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary px-2 py-1" style="font-size: 11px; text-transform: uppercase; border-radius: 4px;">
+                                    <?= esc($pt['ur'] ?? $pt['satker'] ?? '—'); ?>
+                                </span>
+                            </td>
+                            <td style="text-align: right;" class="py-3">
+                                <button type="button" 
+                                        class="btn btn-sm btn-success px-3 py-1 btn-pulihkan-data" 
+                                        data-url="<?= base_url('admin/data-personel/restore/' . $pt['id']); ?>" 
+                                        data-nama="<?= esc($pt['nama'] ?? ''); ?>"
+                                        style="border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;">
+                                    <i class="fas fa-rotate-left"></i> Pulihkan
+                                </button>
+                            </td>
+                        </tr>
+                    <?php 
+                        endforeach; 
+                    else: 
+                    ?>
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Tidak ada data yang sedang disembunyikan.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
             
             <div class="modal-footer border-0 px-4 pb-4 pt-2">
                 <button type="button" class="btn btn-secondary px-4 py-2 font-weight-bold" data-dismiss="modal" data-bs-dismiss="modal" style="border-radius: 8px; font-size: 13px;">
@@ -374,15 +476,42 @@
                                 <option value="AIPTU">AIPTU</option>
                                 <option value="IPDA">IPDA</option>
                                 <option value="IPTU">IPTU</option>
-                                <option value="AKP">AKP</option>
                                 <option value="KOMPOL">KOMPOL</option>
                                 <option value="AKBP">AKBP</option>
                                 <option value="KOMBES POL">KOMBES POL</option>
+                                <option value="PEMBINA">PEMBINA</option>
+                                <option value="PENATA">PENATA</option>
+                                <option value="PENATA TK. I">PENATA TK. I</option>
+                                <option value="PENGATUR">PENGATUR</option>
+                                <option value="PENGATUR TK. I">PENGATUR TK. I</option>
+                                <option value="PPPK">PPPK</option>
                             </select>
                         </div>
+
+                        <div style="flex: 1;">
+                            <label class="font-weight-bold mb-1" style="font-size: 13px; color: #0f172a !important; display: block;">Subbid</label>
+                            <select name="subbid" class="form-control px-3" required style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; height: 42px; color: #0f172a !important; background: #ffffff !important; width: 100%; box-sizing: border-box;">
+                                <option value="" disabled selected>Pilih Subbid</option>
+                                <option value="SUBBIDTEKKOM">SUBBIDTEKKOM</option>
+                                <option value="SUBBIDTEKINFO">SUBBIDTEKINFO</option>
+                                <option value="SUBBAGRENMIN">SUBBAGRENMIN</option>
+                            </select>
+                        </div>
+
                         <div style="flex: 1;">
                             <label class="font-weight-bold mb-1" style="font-size: 13px; color: #0f172a !important; display: block;">UR</label>
-                            <input type="text" name="satker" class="form-control px-3 py-2" placeholder="Contoh: URMINTU" required style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; color: #0f172a !important; background: #ffffff !important; width: 100%; box-sizing: border-box;">
+                            <select name="ur" class="form-control px-3" required style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; height: 42px; color: #0f172a !important; background: #ffffff !important; width: 100%; box-sizing: border-box;">
+                                <option value="" disabled selected>Pilih UR</option>
+                                <option value="URMINTU">URMINTU</option>
+                                <option value="URREN">URREN</option>
+                                <option value="URKEU">URKEU</option>
+                                <option value="URPULLAHTA">URPULLAHTA</option>
+                                <option value="URINTI">URINTI</option>
+                                <option value="URYANDUKNIS">URYANDUKNIS</option>
+                                <option value="URJARKOM">URJARKOM</option>
+                                <option value="URYANKOM">URYANKOM</option>
+                                <option value="URHARKAN">URHARKAN</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -405,10 +534,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Memindahkan semua modal ke <body> secara otomatis saat dibuka agar tidak tertutup backdrop
     if (typeof $ !== 'undefined') {
-        $(document).on('show.bs.modal', '.modal', function () {
-            $(this).appendTo('body');
+        $(document).on('show.bs.modal', '.modal', function () {$(this).appendTo('body');
         });
     } else {
         document.addEventListener('show.bs.modal', function (e) {
@@ -416,7 +543,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Filter & Search
     const searchInput = document.getElementById('searchInput');
     const urFilterSelect = document.getElementById('urFilterSelect');
     const tableRows = document.querySelectorAll('.personel-row-item');
@@ -460,7 +586,6 @@ document.addEventListener('DOMContentLoaded', function () {
         urFilterSelect.addEventListener('change', filterTable);
     }
 
-    // Event listener untuk tombol Pulihkan Data Sampah
     document.querySelectorAll('.btn-pulihkan-data').forEach(button => {
         button.addEventListener('click', function () {
             const url = this.getAttribute('data-url');
@@ -484,7 +609,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Function konfirmasi hapus data
 function konfirmasiHapus(url, nama) {
     Swal.fire({
         title: 'Hapus Data?',

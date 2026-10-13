@@ -17,6 +17,7 @@ class PresensiModel extends Model
         'waktu_masuk',
         'waktu_pulang',
         'status',
+        'keterangan',
         'point_apel'
     ];
 

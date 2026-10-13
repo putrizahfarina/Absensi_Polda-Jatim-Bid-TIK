@@ -8,51 +8,40 @@ use App\Models\PresensiModel;
 
 class Absensi extends BaseController
 {
+    protected $personelModel;
+    protected $presensiModel;
+
+    public function __construct()
+    {
+        $this->personelModel = new PersonelModel();
+        $this->presensiModel = new PresensiModel();
+    }
+
     public function index()
     {
-        $personelModel = new PersonelModel();
-        $presensiModel = new PresensiModel();
+        // 1. Ambil seluruh data personel aktif
+        $personel = $this->personelModel->orderBy('nama', 'ASC')->findAll();
 
-        // 1. Data personel aktif
-        $dataPersonel = $personelModel
-            ->where('deleted_at', null)
-            ->findAll();
+        // 2. Ambil absensi hari ini jika sudah ada
+        $today = date('Y-m-d');
+        $existingAbsen = $this->presensiModel->where('DATE(waktu_masuk)', $today)->findAll();
 
-        // 2. Data absensi yang sudah tercatat hari ini
-        $hariIni = date('Y-m-d');
+        // Map data absensi hari ini berdasarkan personel_id
+        $absenMap = [];
+        foreach ($existingAbsen as $absen) {
+            $absenMap[$absen['personel_id']] = $absen;
+        }
 
-        $absensiHariIni = $presensiModel
-            ->select('presensi.*, personel.nama, personel.nrp_nip, personel.satker')
-            ->join('personel', 'personel.id = presensi.personel_id')
-            ->where('DATE(presensi.waktu_masuk)', $hariIni)
-            ->findAll();
-
-            // Hubungkan status absensi hari ini dengan masing-masing personel
-$statusMap = [];
-
-foreach ($absensiHariIni as $absen) {
-    $statusMap[$absen['personel_id']] = strtoupper(
-        trim($absen['status'] ?? '')
-    );
-}
-
-foreach ($dataPersonel as &$personel) {
-    $personel['status_hari_ini'] =
-        $statusMap[$personel['id']] ?? null;
-}
-
-unset($personel);
-
-        $totalPersonel = count($dataPersonel);
-        $totalTercatat = count($absensiHariIni);
-        $totalBelum    = max(0, $totalPersonel - $totalTercatat);
+        // Tanggal Indonesia
+        setlocale(LC_TIME, 'id_ID.utf8', 'id_ID', 'indonesian');
+        $formatter = new \IntlDateFormatter('id_ID', \IntlDateFormatter::FULL, \IntlDateFormatter::NONE);
+        $tanggalFormat = $formatter->format(new \DateTime());
 
         $data = [
-            'title'          => 'Absensi Personel',
-            'personel'       => $dataPersonel,
-            'absensiHariIni' => $absensiHariIni,
-            'totalTercatat'  => $totalTercatat,
-            'totalBelum'     => $totalBelum,
+            'title'         => 'Absensi Personel',
+            'tanggal'       => $tanggalFormat,
+            'personel'      => $personel,
+            'absenHariIni'  => $absenMap
         ];
 
         return view('admin/absen/absensi', $data);
@@ -60,95 +49,55 @@ unset($personel);
 
     public function simpan()
     {
-        $presensiModel = new PresensiModel();
+        $json = $this->request->getJSON(true);
+        $exceptions = $json['exceptions'] ?? []; // Array pengecualian
+        $today = date('Y-m-d');
+        $now = date('Y-m-d H:i:s');
 
-        // Mengambil status absensi
-        $statuses = $this->request->getPost('status');
+        // Ambil semua ID personel
+        $allPersonel = $this->personelModel->findAll();
+        
+        // Buat map pengecualian: [personel_id => ['status' => ..., 'keterangan' => ...]]
+        $exceptionMap = [];
+        foreach ($exceptions as $exc) {
+            $exceptionMap[$exc['personel_id']] = [
+                'status'     => $exc['status'],
+                'keterangan' => $exc['keterangan'] ?? ''
+            ];
+        }
 
-        // Mengambil Deskripsi Kegiatan Hari Ini
-        $deskripsiKegiatan = trim(
-            $this->request->getPost('deskripsi_kegiatan') ?? ''
-        );
+        // Hapus data absensi hari ini untuk di-sync ulang secara bersih
+        $this->presensiModel->where('DATE(waktu_masuk)', $today)->delete();
 
-        $waktuSekarang = date('Y-m-d H:i:s');
-        $hariIni       = date('Y-m-d');
-
-        // Koneksi database langsung
-        // Digunakan karena PresensiModel tidak diubah
-        $db = \Config\Database::connect();
-
-        // Hanya proses jika ada status yang dipilih
-        if (!empty($statuses) && is_array($statuses)) {
-
-            foreach ($statuses as $personelId => $statusPilihan) {
-
-                // Lewati jika status tidak diisi
-                if (empty($statusPilihan)) {
-                    continue;
-                }
-
-                // Cek apakah personel sudah memiliki absensi hari ini
-                $cekAbsen = $presensiModel
-                    ->where('personel_id', $personelId)
-                    ->where('DATE(waktu_masuk)', $hariIni)
-                    ->first();
-
-                if ($cekAbsen) {
-
-                    // Jika sudah ada, update status dan waktu
-                    $presensiModel->update($cekAbsen['id'], [
-                        'status'      => $statusPilihan,
-                        'waktu_masuk' => $waktuSekarang
-                    ]);
-
-                    // Simpan deskripsi kegiatan
-                    $db->table('presensi')
-                        ->where('id', $cekAbsen['id'])
-                        ->update([
-                            'point_apel' => $deskripsiKegiatan
-                        ]);
-
-                } else {
-
-                    // Jika belum ada, buat data absensi baru
-                    $presensiModel->insert([
-                        'personel_id' => $personelId,
-                        'status'      => $statusPilihan,
-                        'waktu_masuk' => $waktuSekarang,
-                    ]);
-
-                    // Ambil ID data yang baru dibuat
-                    $presensiId = $presensiModel->getInsertID();
-
-                    // Simpan deskripsi kegiatan
-                    $db->table('presensi')
-                        ->where('id', $presensiId)
-                        ->update([
-                            'point_apel' => $deskripsiKegiatan
-                        ]);
-                }
+        $dataInsert = [];
+        foreach ($allPersonel as $p) {
+            $pId = $p['id'];
+            if (isset($exceptionMap[$pId])) {
+                // Status Pengecualian (Sakit/DL/Izin/Alfa/dll)
+                $dataInsert[] = [
+                    'personel_id' => $pId,
+                    'status'      => $exceptionMap[$pId]['status'],
+                    'keterangan'  => $exceptionMap[$pId]['keterangan'],
+                    'waktu_masuk' => $now
+                ];
+            } else {
+                // Otomatis HADIR
+                $dataInsert[] = [
+                    'personel_id' => $pId,
+                    'status'      => 'Hadir',
+                    'keterangan'  => '',
+                    'waktu_masuk' => $now
+                ];
             }
         }
 
-        return redirect()
-            ->to(base_url('admin/absensi'))
-            ->with(
-                'pesan',
-                'Data absensi berhasil disimpan!'
-            );
-    }
+        if (!empty($dataInsert)) {
+            $this->presensiModel->insertBatch($dataInsert);
+        }
 
-    public function hapus($id)
-    {
-        $presensiModel = new PresensiModel();
-
-        $presensiModel->delete($id);
-
-        return redirect()
-            ->to(base_url('admin/absensi'))
-            ->with(
-                'pesan',
-                'Data absensi berhasil dihapus!'
-            );
+        return $this->response->setJSON([
+            'status'  => 'success',
+            'message' => 'Absensi seluruh personel berhasil disinkronkan!'
+        ]);
     }
 }

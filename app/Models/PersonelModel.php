@@ -18,8 +18,8 @@ class PersonelModel extends Model
         'nrp_nip',
         'nama',
         'pangkat',
-        'jabatan',
-        'satker',
+        'subbid',
+        'ur',
         'jenis_kelamin',
         'qr_code'
     ];
