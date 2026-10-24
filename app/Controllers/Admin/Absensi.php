@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Controllers\Admin;
-
+use App\Models\DeskripsiKegiatanModel;
 use App\Controllers\BaseController;
 use App\Models\PersonelModel;
 use App\Models\PresensiModel;
@@ -50,6 +50,24 @@ class Absensi extends BaseController
     public function simpan()
     {
         $json = $this->request->getJSON(true);
+        // Simpan deskripsi kegiatan untuk tanggal hari ini
+$deskripsi = trim($json['deskripsi'] ?? '');
+$deskripsiModel = new DeskripsiKegiatanModel();
+
+$existingDeskripsi = $deskripsiModel
+    ->where('tanggal', date('Y-m-d'))
+    ->first();
+
+if ($existingDeskripsi) {
+    $deskripsiModel->update($existingDeskripsi['id'], [
+        'deskripsi' => $deskripsi
+    ]);
+} else {
+    $deskripsiModel->insert([
+        'tanggal'   => date('Y-m-d'),
+        'deskripsi' => $deskripsi
+    ]);
+}
         $exceptions = $json['exceptions'] ?? []; // Array pengecualian
         $today = date('Y-m-d');
         $now = date('Y-m-d H:i:s');

@@ -1,3 +1,4 @@
+
 <?= $this->extend('templates/admin_page_layout') ?>
 <?= $this->section('content') ?>
 
@@ -23,40 +24,28 @@
         z-index: 1;
     }
 
-    /* =========================================================
-       HERO HITAM - MERAH
-       ========================================================= */
-
+    /* HERO HITAM - MERAH */
     .laporan-hero {
         position: relative;
         overflow: hidden;
-
         width: calc(100% + 10px);
         margin-left: -5px;
         margin-top: -95px;
         margin-bottom: 30px;
-
         min-height: 330px;
         padding: 145px 48px 55px;
-
         display: flex;
         align-items: center;
-
         border-radius: 0 0 22px 22px;
-
-        background:
-            linear-gradient(
-                115deg,
-                #171717 0%,
-                #202020 40%,
-                #3a171a 70%,
-                #850c13 100%
-            );
-
+        background: linear-gradient(
+            115deg,
+            #171717 0%,
+            #202020 40%,
+            #3a171a 70%,
+            #850c13 100%
+        );
         color: #fff;
-
         box-shadow: 0 12px 30px rgba(0, 0, 0, .14);
-
         z-index: 1;
     }
 
@@ -70,17 +59,12 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-
         margin-bottom: 12px;
         padding: 8px 15px;
-
         border: 1px solid rgba(255,255,255,.20);
         border-radius: 30px;
-
         background: rgba(255,255,255,.08);
-
         color: #e5c86b;
-
         font-size: 13px;
         font-weight: 800;
         letter-spacing: 1.2px;
@@ -93,60 +77,44 @@
 
     .laporan-hero h2 {
         margin: 0 0 12px;
-
         color: #fff;
-
         font-size: 40px;
         font-weight: 800;
         line-height: 1.2;
-        letter-spacing: -0.5px;
+        letter-spacing: -.5px;
     }
 
     .laporan-hero p {
         max-width: 680px;
         margin: 0;
-
         color: rgba(255,255,255,.92);
-
         font-size: 16px;
         font-weight: 500;
         line-height: 1.7;
     }
 
-    /* =========================================================
-       DEKORASI HERO
-       ========================================================= */
-
+    /* DEKORASI HERO */
     .hero-decoration {
         position: absolute;
         right: 55px;
         top: 58%;
-
         width: 150px;
         height: 150px;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         transform: translateY(-50%);
-
         border: 1px solid rgba(255,255,255,.10);
         border-radius: 50%;
-
         background: rgba(255,255,255,.04);
-
         z-index: 2;
     }
 
     .hero-decoration::before {
         content: "";
-
         position: absolute;
-
         width: 105px;
         height: 105px;
-
         border: 1px solid rgba(199,165,74,.22);
         border-radius: 50%;
     }
@@ -154,52 +122,35 @@
     .hero-decoration i {
         position: relative;
         z-index: 2;
-
         color: #c7a54a;
         font-size: 58px;
     }
 
-    /* =========================================================
-       ALERT
-       ========================================================= */
-
+    /* ALERT */
     .laporan-alert {
         border: none;
         border-radius: 12px;
-
         box-shadow: 0 5px 18px rgba(0,0,0,.08);
-
         font-size: 13px;
         font-weight: 600;
     }
 
-    /* =========================================================
-       MAIN CARD
-       ========================================================= */
-
+    /* MAIN CARD */
     .laporan-main-card {
         overflow: hidden;
-
         background: #fff;
-
         border: 1px solid #e8e8e8;
         border-radius: 18px;
-
         box-shadow: 0 8px 25px rgba(0,0,0,.07);
     }
 
-    /* =========================================================
-       SECTION HEADER
-       ========================================================= */
-
+    /* SECTION HEADER */
     .laporan-section-header {
         min-height: 85px;
         padding: 20px 28px;
-
         display: flex;
         align-items: center;
         justify-content: space-between;
-
         border-bottom: 1px solid #eeeeee;
     }
 
@@ -212,15 +163,13 @@
     .section-header-icon {
         width: 48px;
         height: 48px;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         border-radius: 12px;
-
         background: #fcebed;
         color: #b5121b;
+        flex-shrink: 0;
     }
 
     .section-header-icon i {
@@ -229,79 +178,64 @@
 
     .laporan-section-header h4 {
         margin: 0 0 5px;
-
         color: #171717;
-
         font-size: 21px;
         font-weight: 800;
     }
 
     .laporan-section-header p {
         margin: 0;
-
-        color: #555555;
-
+        color: #555;
         font-size: 14px;
         font-weight: 500;
     }
 
     .section-badge {
         padding: 8px 14px;
-
         border-radius: 20px;
-
         background: #f7f0dc;
         color: #735a13;
-
         font-size: 12px;
         font-weight: 800;
         letter-spacing: .8px;
     }
 
-    /* =========================================================
-       FORM BODY
-       ========================================================= */
-
+    /* FORM BODY */
     .laporan-form-body {
         padding: 28px;
     }
 
-    /* =========================================================
-       FILTER
-       ========================================================= */
-
+    /* FILTER: PILIHAN DI KIRI, INPUT PERIODE DI KANAN */
     .filter-box {
         padding: 22px;
-
         display: grid;
-        grid-template-columns: 1fr 310px;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 310px);
         gap: 30px;
         align-items: center;
-
         border: 1px solid #eeeeee;
         border-radius: 14px;
-
         background: #fafafa;
+    }
+
+    .filter-left {
+        min-width: 0;
     }
 
     .filter-description {
         display: flex;
         align-items: center;
         gap: 15px;
+        margin-bottom: 24px;
     }
 
     .filter-icon {
         width: 48px;
         height: 48px;
-
         flex-shrink: 0;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         border-radius: 12px;
-
         background: #171717;
         color: #c7a54a;
     }
@@ -312,18 +246,14 @@
 
     .filter-description h5 {
         margin: 0 0 5px;
-
         color: #171717;
-
         font-size: 16px;
         font-weight: 800;
     }
 
     .filter-description p {
         margin: 0;
-
-        color: #555555;
-
+        color: #555;
         font-size: 14px;
         font-weight: 500;
         line-height: 1.7;
@@ -331,14 +261,65 @@
 
     .filter-label {
         display: block;
-
-        margin-bottom: 7px;
-
-        color: #333333;
-
+        margin-bottom: 9px;
+        color: #333;
         font-size: 12px;
         font-weight: 800;
         letter-spacing: .7px;
+    }
+
+    /* RADIO HORIZONTAL */
+    .jenis-laporan-options {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .jenis-laporan-option {
+        min-height: 43px;
+        padding: 10px 13px;
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 7px;
+        margin: 0;
+        white-space: nowrap;
+        cursor: pointer;
+        border: 1px solid #dedede;
+        border-radius: 9px;
+        background: #fff;
+        color: #333;
+        font-size: 13px;
+        font-weight: 700;
+        transition: .2s ease;
+    }
+
+    .jenis-laporan-option:hover {
+        border-color: #b5121b;
+        background: #fff7f7;
+    }
+
+    .jenis-laporan-option:has(input[type="radio"]:checked) {
+        border-color: #b5121b;
+        background: #fcebed;
+        color: #850c13;
+        box-shadow: 0 0 0 1px rgba(181,18,27,.08);
+    }
+
+    .jenis-laporan-option input[type="radio"] {
+        width: 15px;
+        height: 15px;
+        margin: 0;
+        accent-color: #b5121b;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    /* INPUT TANGGAL DAN BULAN */
+    .period-input-column {
+        min-width: 0;
     }
 
     .date-input-wrapper {
@@ -349,37 +330,25 @@
         position: absolute;
         left: 13px;
         top: 50%;
-
         transform: translateY(-50%);
-
         color: #b5121b;
         font-size: 20px;
-
         pointer-events: none;
         z-index: 2;
     }
 
-    /* =========================================================
-       INPUT TANGGAL
-       ========================================================= */
-
     .date-input {
+        width: 100%;
         height: 48px;
-
         padding-left: 43px !important;
-
-        border: 1px solid #cccccc !important;
+        border: 1px solid #ccc !important;
         border-radius: 9px !important;
-
         background: #fff !important;
-
-        color: #111111 !important;
-        -webkit-text-fill-color: #111111 !important;
-
-        font-size: 16px !important;
+        color: #111 !important;
+        font-size: 14px !important;
         font-weight: 700 !important;
-
         opacity: 1 !important;
+        -webkit-text-fill-color: #111 !important;
     }
 
     .date-input::-webkit-datetime-edit,
@@ -388,30 +357,38 @@
     .date-input::-webkit-datetime-edit-month-field,
     .date-input::-webkit-datetime-edit-day-field,
     .date-input::-webkit-datetime-edit-year-field {
-        color: #111111 !important;
-        -webkit-text-fill-color: #111111 !important;
-        font-size: 16px !important;
+        color: #111 !important;
+        -webkit-text-fill-color: #111 !important;
+        font-size: 14px !important;
         font-weight: 700 !important;
     }
 
     .date-input:focus {
         border-color: #b5121b !important;
-
-        box-shadow:
-            0 0 0 3px rgba(181,18,27,.08) !important;
+        box-shadow: 0 0 0 3px rgba(181,18,27,.08) !important;
+        outline: none;
     }
 
-    /* =========================================================
-       STATUS
-       ========================================================= */
+    .period-input-group[hidden] {
+        display: none !important;
+    }
 
+    .period-help {
+        display: block;
+        margin-top: 7px;
+        color: #666;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.6;
+    }
+
+    /* STATUS */
     .status-section {
         margin-top: 28px;
     }
 
     .status-section-title {
         margin-bottom: 14px;
-
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -419,67 +396,53 @@
 
     .status-section-title h5 {
         margin: 0;
-
         color: #171717;
-
         font-size: 16px;
         font-weight: 800;
     }
 
     .status-section-title span {
         padding: 6px 11px;
-
         border-radius: 20px;
-
         background: #f1f2f4;
-        color: #444444;
-
+        color: #444;
         font-size: 12px;
         font-weight: 700;
     }
 
     .status-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 12px;
     }
 
     .status-card {
         min-height: 78px;
         padding: 14px 15px;
-
         display: flex;
         align-items: center;
         gap: 12px;
-
         border: 1px solid #e5e5e5;
         border-radius: 11px;
-
         background: #fff;
-
         transition: .2s ease;
     }
 
     .status-card:hover {
         transform: translateY(-2px);
-
         box-shadow: 0 5px 15px rgba(0,0,0,.08);
     }
 
     .status-icon {
         width: 40px;
         height: 40px;
-
         flex-shrink: 0;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         border-radius: 9px;
-
         background: #f1f2f4;
-        color: #444444;
+        color: #444;
     }
 
     .status-icon i {
@@ -488,52 +451,38 @@
 
     .status-name {
         margin: 0 0 4px;
-
-        color: #222222;
-
+        color: #222;
         font-size: 13px;
         font-weight: 800;
     }
 
     .status-desc {
         margin: 0;
-
-        color: #666666;
-
+        color: #666;
         font-size: 12px;
         font-weight: 500;
     }
 
-    /* =========================================================
-       POIN APEL
-       ========================================================= */
-
+    /* POIN APEL */
     .apel-info {
         margin-top: 18px;
         padding: 17px 18px;
-
         display: flex;
         align-items: center;
         gap: 13px;
-
         border: 1px solid #eadfbf;
         border-radius: 12px;
-
         background: #fffaf0;
     }
 
     .apel-icon {
         width: 44px;
         height: 44px;
-
         flex-shrink: 0;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         border-radius: 10px;
-
         background: #f7f0dc;
         color: #8a6915;
     }
@@ -544,92 +493,73 @@
 
     .apel-info h5 {
         margin: 0 0 5px;
-
         color: #4f3d0e;
-
         font-size: 14px;
         font-weight: 800;
     }
 
     .apel-info p {
         margin: 0;
-
         color: #66572f;
-
         font-size: 13px;
         font-weight: 500;
         line-height: 1.6;
     }
 
-    /* =========================================================
-       ACTION
-       ========================================================= */
-
+    /* ACTION */
     .action-area {
         margin-top: 30px;
         padding-top: 25px;
-
-        border-top: 1px solid #eeeeee;
+        border-top: 1px solid #eee;
     }
 
     .action-header {
         margin-bottom: 15px;
-
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
     }
 
     .action-title {
         color: #171717;
-
         font-size: 16px;
         font-weight: 800;
     }
 
     .action-description {
-        color: #666666;
-
+        color: #666;
         font-size: 13px;
         font-weight: 500;
     }
 
     .action-buttons {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 12px;
     }
 
     .btn-laporan {
         min-height: 58px;
-
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 9px;
-
         border: none !important;
         border-radius: 10px !important;
-
         font-size: 14px !important;
         font-weight: 800 !important;
-
         transition: .2s ease;
     }
 
     .btn-laporan:hover {
         transform: translateY(-2px);
-
         box-shadow: 0 7px 17px rgba(0,0,0,.14);
     }
 
     .btn-icon {
         font-size: 21px !important;
     }
-
-    /* =========================================================
-       PDF - MERAH
-       ========================================================= */
 
     .btn-pdf {
         background: #b5121b !important;
@@ -641,10 +571,6 @@
         color: #fff !important;
     }
 
-    /* =========================================================
-       DOC - HITAM
-       ========================================================= */
-
     .btn-doc {
         background: #171717 !important;
         color: #fff !important;
@@ -654,10 +580,6 @@
         background: #000 !important;
         color: #fff !important;
     }
-
-    /* =========================================================
-       WHATSAPP - GOLD
-       ========================================================= */
 
     .btn-wa {
         background: #c7a54a !important;
@@ -669,32 +591,21 @@
         color: #171717 !important;
     }
 
-    /* =========================================================
-       NOTE
-       ========================================================= */
-
+    /* NOTE */
     .laporan-note {
         margin-top: 18px;
         padding: 13px 15px;
-
         border-radius: 9px;
-
         background: #f1f2f4;
-        color: #666666;
-
+        color: #666;
         font-size: 12px;
         font-weight: 500;
         line-height: 1.5;
-
         text-align: center;
     }
 
-    /* =========================================================
-       RESPONSIVE
-       ========================================================= */
-
+    /* RESPONSIVE */
     @media (max-width: 1000px) {
-
         .laporan-hero {
             margin-top: -80px;
         }
@@ -704,12 +615,20 @@
         }
 
         .filter-box {
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+            gap: 20px;
+        }
+
+        .jenis-laporan-options {
+            gap: 7px;
+        }
+
+        .jenis-laporan-option {
+            padding: 9px 10px;
         }
     }
 
     @media (max-width: 800px) {
-
         .laporan-hero {
             margin-top: -60px;
             min-height: 300px;
@@ -724,8 +643,17 @@
             display: none;
         }
 
+        .filter-box {
+            grid-template-columns: 1fr;
+            gap: 22px;
+        }
+
+        .jenis-laporan-options {
+            flex-wrap: wrap;
+        }
+
         .status-grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .action-buttons {
@@ -734,15 +662,12 @@
     }
 
     @media (max-width: 600px) {
-
         .laporan-hero {
             width: calc(100% + 4px);
             margin-left: -2px;
             margin-top: -40px;
-
             min-height: 250px;
             padding: 90px 25px 40px;
-
             border-radius: 0 0 16px 16px;
         }
 
@@ -774,16 +699,30 @@
             display: none;
         }
 
-        .status-grid {
-            grid-template-columns: 1fr;
-        }
-
         .filter-box {
             padding: 18px;
         }
 
+        .filter-description {
+            align-items: flex-start;
+        }
+
         .filter-description p {
             font-size: 13px !important;
+        }
+
+        .jenis-laporan-options {
+            gap: 8px;
+        }
+
+        .jenis-laporan-option {
+            min-height: 40px;
+            padding: 9px 10px;
+            font-size: 12px;
+        }
+
+        .status-grid {
+            grid-template-columns: 1fr;
         }
 
         .status-name {
@@ -793,55 +732,42 @@
         .status-desc {
             font-size: 12px !important;
         }
+
+        .action-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
     }
 </style>
 
-
 <div class="content">
-
     <div class="container-fluid laporan-page">
 
-        <!-- =====================================================
-             HERO
-             ===================================================== -->
-
+        <!-- HERO -->
         <div class="laporan-hero">
-
             <div class="laporan-hero-content">
-
                 <div class="laporan-eyebrow">
                     <i class="material-icons">assessment</i>
                     BID TIK POLDA JAWA TIMUR
                 </div>
 
-                <h2>
-                    Generate Laporan
-                </h2>
+                <h2>Generate Laporan</h2>
 
                 <p>
                     Rekapitulasi dan pelaporan data kehadiran personel
                     Bidang Teknologi Informasi dan Komunikasi.
                 </p>
-
             </div>
 
             <div class="hero-decoration">
                 <i class="material-icons">description</i>
             </div>
-
         </div>
 
-
-        <!-- =====================================================
-             FLASH MESSAGE
-             ===================================================== -->
-
+        <!-- FLASH MESSAGE -->
         <?php if (session()->getFlashdata('msg')): ?>
-
             <div class="mb-3">
-
                 <div class="alert alert-<?= session()->getFlashdata('error') == true ? 'danger' : 'success' ?> laporan-alert">
-
                     <button
                         type="button"
                         class="close"
@@ -852,339 +778,319 @@
                     </button>
 
                     <?= session()->getFlashdata('msg') ?>
-
                 </div>
-
             </div>
-
         <?php endif; ?>
 
-
-        <!-- =====================================================
-             MAIN CARD
-             ===================================================== -->
-
+        <!-- MAIN CARD -->
         <div class="laporan-main-card">
 
             <div class="laporan-section-header">
-
                 <div class="section-header-left">
-
                     <div class="section-header-icon">
                         <i class="material-icons">description</i>
                     </div>
 
                     <div>
-
-                        <h4>
-                            Laporan Kehadiran Personel
-                        </h4>
-
+                        <h4>Laporan Kehadiran Personel</h4>
                         <p>
-                            Tentukan tanggal laporan yang ingin ditampilkan.
+                            Pilih jenis dan periode laporan yang ingin dibuat.
                         </p>
-
                     </div>
-
                 </div>
 
-                <div class="section-badge">
-                    BID TIK
-                </div>
-
+                <div class="section-badge">BID TIK</div>
             </div>
-
 
             <form
                 action="<?= base_url('admin/laporan/generate'); ?>"
                 method="post"
                 id="formLaporan"
             >
-
                 <?= csrf_field() ?>
 
                 <div class="laporan-form-body">
 
-                    <!-- =================================================
-                         FILTER TANGGAL
-                         ================================================= -->
-
+                    <!-- FILTER JENIS DAN PERIODE -->
                     <div class="filter-box">
 
-                        <div class="filter-description">
+                        <!-- KOLOM KIRI: DESKRIPSI DAN RADIO -->
+                        <div class="filter-left">
 
-                            <div class="filter-icon">
-                                <i class="material-icons">
-                                    calendar_month
-                                </i>
+                            <div class="filter-description">
+                                <div class="filter-icon">
+                                    <i class="material-icons">calendar_month</i>
+                                </div>
+
+                                <div>
+                                    <h5>Periode Laporan</h5>
+                                    <p>
+                                        Pilih laporan harian, mingguan, atau bulanan.
+                                        Data akan disesuaikan dengan periode yang dipilih.
+                                    </p>
+                                </div>
                             </div>
 
-                            <div>
+                            <div class="jenis-laporan-wrapper">
+                                <label class="filter-label">
+                                    JENIS LAPORAN
+                                </label>
 
-                                <h5>
-                                    Periode Laporan
-                                </h5>
-
-                                <p>
-                                    Pilih tanggal untuk menentukan data kehadiran
-                                    yang akan ditampilkan pada laporan.
-                                </p>
-
-                            </div>
-
-                        </div>
-
-
-                        <div>
-
-                            <label
-                                for="tanggal"
-                                class="filter-label"
-                            >
-                                TANGGAL LAPORAN
-                            </label>
-
-                            <div class="date-input-wrapper">
-
-                                <i class="material-icons">
-                                    calendar_today
-                                </i>
-
-                                <input
-                                    type="date"
-                                    name="tanggal"
-                                    id="tanggal"
-                                    class="form-control date-input"
-                                    value="<?= date('Y-m-d'); ?>"
-                                    required
+                                <div
+                                    class="jenis-laporan-options"
+                                    role="radiogroup"
+                                    aria-label="Jenis laporan"
                                 >
+                                    <label class="jenis-laporan-option">
+                                        <input
+                                            type="radio"
+                                            name="periode"
+                                            value="harian"
+                                            checked
+                                        >
+                                        <span>Harian</span>
+                                    </label>
 
+                                    <label class="jenis-laporan-option">
+                                        <input
+                                            type="radio"
+                                            name="periode"
+                                            value="mingguan"
+                                        >
+                                        <span>Mingguan</span>
+                                    </label>
+
+                                    <label class="jenis-laporan-option">
+                                        <input
+                                            type="radio"
+                                            name="periode"
+                                            value="bulanan"
+                                        >
+                                        <span>Bulanan</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KOLOM KANAN: INPUT PERIODE -->
+                        <div class="period-input-column">
+
+                            <!-- INPUT HARIAN -->
+                            <div
+                                class="period-input-group"
+                                id="inputHarian"
+                            >
+                                <label for="tanggal" class="filter-label">
+                                    TANGGAL LAPORAN
+                                </label>
+
+                                <div class="date-input-wrapper">
+                                    <i class="material-icons">calendar_today</i>
+
+                                    <input
+                                        type="date"
+                                        name="tanggal"
+                                        id="tanggal"
+                                        class="form-control date-input"
+                                        value="<?= date('Y-m-d'); ?>"
+                                        required
+                                    >
+                                </div>
+
+                                <small class="period-help">
+                                    Menampilkan data kehadiran pada satu tanggal.
+                                </small>
+                            </div>
+
+                            <!-- INPUT MINGGUAN -->
+                            <div
+                                class="period-input-group"
+                                id="inputMingguan"
+                                hidden
+                            >
+                                <label for="tanggalMingguan" class="filter-label">
+                                    TANGGAL ACUAN MINGGU
+                                </label>
+
+                                <div class="date-input-wrapper">
+                                    <i class="material-icons">calendar_today</i>
+
+                                    <input
+                                        type="date"
+                                        name="tanggal"
+                                        id="tanggalMingguan"
+                                        class="form-control date-input"
+                                        value="<?= date('Y-m-d'); ?>"
+                                        disabled
+                                    >
+                                </div>
+
+                                <small class="period-help">
+                                    Laporan mencakup Senin sampai Minggu
+                                    pada minggu yang dipilih.
+                                </small>
+                            </div>
+
+                            <!-- INPUT BULANAN -->
+                            <div
+                                class="period-input-group"
+                                id="inputBulanan"
+                                hidden
+                            >
+                                <label for="bulan" class="filter-label">
+                                    BULAN DAN TAHUN LAPORAN
+                                </label>
+
+                                <div class="date-input-wrapper">
+                                    <i class="material-icons">calendar_month</i>
+
+                                    <input
+                                        type="month"
+                                        name="bulan"
+                                        id="bulan"
+                                        class="form-control date-input"
+                                        value="<?= date('Y-m'); ?>"
+                                        disabled
+                                    >
+                                </div>
+
+                                <small class="period-help">
+                                    Laporan mencakup seluruh tanggal
+                                    pada bulan yang dipilih.
+                                </small>
                             </div>
 
                         </div>
-
                     </div>
 
-
-                    <!-- =================================================
-                         STATUS ABSENSI
-                         ================================================= -->
-
+                    <!-- STATUS ABSENSI -->
                     <div class="status-section">
 
                         <div class="status-section-title">
-
-                            <h5>
-                                Status Absensi dalam Laporan
-                            </h5>
-
-                            <span>
-                                9 kategori
-                            </span>
-
+                            <h5>Status Absensi dalam Laporan</h5>
+                            <span>9 kategori</span>
                         </div>
-
 
                         <div class="status-grid">
 
                             <div class="status-card">
                                 <div class="status-icon">
-                                    <i class="material-icons">
-                                        check_circle
-                                    </i>
+                                    <i class="material-icons">check_circle</i>
                                 </div>
-
                                 <div>
                                     <p class="status-name">HADIR</p>
-                                    <p class="status-desc">
-                                        Personel hadir
-                                    </p>
+                                    <p class="status-desc">Personel hadir</p>
                                 </div>
                             </div>
 
-
                             <div class="status-card">
                                 <div class="status-icon">
-                                    <i class="material-icons">
-                                        work
-                                    </i>
+                                    <i class="material-icons">work</i>
                                 </div>
-
                                 <div>
                                     <p class="status-name">DINAS</p>
-                                    <p class="status-desc">
-                                        Sedang menjalankan dinas
-                                    </p>
+                                    <p class="status-desc">Sedang menjalankan dinas</p>
                                 </div>
                             </div>
 
-
                             <div class="status-card">
                                 <div class="status-icon">
-                                    <i class="material-icons">
-                                        directions_run
-                                    </i>
+                                    <i class="material-icons">directions_run</i>
                                 </div>
-
                                 <div>
-                                    <p class="status-name">
-                                        LEPAS DINAS
-                                    </p>
-                                    <p class="status-desc">
-                                        Personel lepas dinas
-                                    </p>
+                                    <p class="status-name">LEPAS DINAS</p>
+                                    <p class="status-desc">Personel lepas dinas</p>
                                 </div>
                             </div>
 
-
                             <div class="status-card">
                                 <div class="status-icon">
-                                    <i class="material-icons">
-                                        beach_access
-                                    </i>
+                                    <i class="material-icons">beach_access</i>
                                 </div>
-
                                 <div>
                                     <p class="status-name">CUTI</p>
-                                    <p class="status-desc">
-                                        Personel sedang cuti
-                                    </p>
+                                    <p class="status-desc">Personel sedang cuti</p>
                                 </div>
                             </div>
 
-
                             <div class="status-card">
                                 <div class="status-icon">
-                                    <i class="material-icons">
-                                        healing
-                                    </i>
+                                    <i class="material-icons">healing</i>
                                 </div>
-
                                 <div>
                                     <p class="status-name">SAKIT</p>
-                                    <p class="status-desc">
-                                        Personel sedang sakit
-                                    </p>
+                                    <p class="status-desc">Personel sedang sakit</p>
                                 </div>
                             </div>
 
-
                             <div class="status-card">
                                 <div class="status-icon">
-                                    <i class="material-icons">
-                                        description
-                                    </i>
+                                    <i class="material-icons">description</i>
                                 </div>
-
                                 <div>
                                     <p class="status-name">IZIN</p>
-                                    <p class="status-desc">
-                                        Personel mendapatkan izin
-                                    </p>
+                                    <p class="status-desc">Personel mendapatkan izin</p>
                                 </div>
                             </div>
 
-
                             <div class="status-card">
                                 <div class="status-icon">
-                                    <i class="material-icons">
-                                        schedule
-                                    </i>
+                                    <i class="material-icons">schedule</i>
                                 </div>
-
                                 <div>
-                                    <p class="status-name">
-                                        TERLAMBAT
-                                    </p>
-                                    <p class="status-desc">
-                                        Personel datang terlambat
-                                    </p>
+                                    <p class="status-name">TERLAMBAT</p>
+                                    <p class="status-desc">Personel datang terlambat</p>
                                 </div>
                             </div>
 
-
                             <div class="status-card">
                                 <div class="status-icon">
-                                    <i class="material-icons">
-                                        school
-                                    </i>
+                                    <i class="material-icons">school</i>
                                 </div>
-
                                 <div>
                                     <p class="status-name">DIK</p>
-                                    <p class="status-desc">
-                                        Personel dalam pendidikan
-                                    </p>
+                                    <p class="status-desc">Personel dalam pendidikan</p>
                                 </div>
                             </div>
 
-
                             <div class="status-card">
                                 <div class="status-icon">
-                                    <i class="material-icons">
-                                        military_tech
-                                    </i>
+                                    <i class="material-icons">military_tech</i>
                                 </div>
-
                                 <div>
                                     <p class="status-name">BKO</p>
-                                    <p class="status-desc">
-                                        Personel BKO
-                                    </p>
+                                    <p class="status-desc">Personel BKO</p>
                                 </div>
                             </div>
 
                         </div>
 
-
-                        <!-- =================================================
-                             POIN APEL
-                             ================================================= -->
-
+                        <!-- POIN APEL -->
                         <div class="apel-info">
-
                             <div class="apel-icon">
-                                <i class="material-icons">
-                                    military_tech
-                                </i>
+                                <i class="material-icons">military_tech</i>
                             </div>
 
                             <div>
-
-                                <h5>
-                                    Poin Apel
-                                </h5>
-
+                                <h5>Poin Apel</h5>
                                 <p>
                                     Data poin apel akan menjadi bagian dari laporan
                                     bersama rekapitulasi kehadiran personel.
                                 </p>
-
                             </div>
-
                         </div>
 
                     </div>
 
-
-                    <!-- =================================================
-                         ACTION
-                         ================================================= -->
-
+                    <!-- ACTION -->
                     <div class="action-area">
 
                         <div class="action-header">
-
-                            <div class="action-title">
-                                Pilihan Laporan
-                            </div>
-
+                            <div class="action-title">Pilihan Laporan</div>
                             <div class="action-description">
                                 Pilih format atau kirim laporan
                             </div>
-
                         </div>
-
 
                         <div class="action-buttons">
 
@@ -1195,15 +1101,9 @@
                                 value="pdf"
                                 class="btn btn-laporan btn-pdf"
                             >
-                                <i class="material-icons btn-icon">
-                                    picture_as_pdf
-                                </i>
-
-                                <span>
-                                    Generate PDF
-                                </span>
+                                <i class="material-icons btn-icon">picture_as_pdf</i>
+                                <span>Generate PDF</span>
                             </button>
-
 
                             <!-- DOC -->
                             <button
@@ -1212,15 +1112,9 @@
                                 value="doc"
                                 class="btn btn-laporan btn-doc"
                             >
-                                <i class="material-icons btn-icon">
-                                    description
-                                </i>
-
-                                <span>
-                                    Generate DOC
-                                </span>
+                                <i class="material-icons btn-icon">description</i>
+                                <span>Generate DOC</span>
                             </button>
-
 
                             <!-- WHATSAPP -->
                             <button
@@ -1231,63 +1125,141 @@
                                 class="btn btn-laporan btn-wa"
                                 onclick="return konfirmasiWhatsApp();"
                             >
-                                <i class="material-icons btn-icon">
-                                    send
-                                </i>
-
-                                <span>
-                                    Kirim WhatsApp
-                                </span>
+                                <i class="material-icons btn-icon">send</i>
+                                <span>Kirim WhatsApp</span>
                             </button>
 
                         </div>
-
                     </div>
 
-
-                    <!-- =================================================
-                         NOTE
-                         ================================================= -->
-
+                    <!-- NOTE -->
                     <div class="laporan-note">
-
-                        Laporan dibuat berdasarkan data kehadiran personel
-                        pada tanggal yang dipilih.
-
+                        Laporan dibuat berdasarkan jenis dan periode kehadiran
+                        personel yang dipilih.
                     </div>
 
                 </div>
-
             </form>
-
         </div>
-
     </div>
-
 </div>
 
-
 <script>
-    function konfirmasiWhatsApp() {
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formLaporan');
 
+    const inputHarian = document.getElementById('inputHarian');
+    const inputMingguan = document.getElementById('inputMingguan');
+    const inputBulanan = document.getElementById('inputBulanan');
+
+    const tanggal = document.getElementById('tanggal');
+    const tanggalMingguan = document.getElementById('tanggalMingguan');
+    const bulan = document.getElementById('bulan');
+
+    const pilihanPeriode = document.querySelectorAll('input[name="periode"]');
+
+    function getPeriode() {
+        const radioTerpilih = document.querySelector(
+            'input[name="periode"]:checked'
+        );
+
+        return radioTerpilih ? radioTerpilih.value : 'harian';
+    }
+
+    function perbaruiInputPeriode() {
+        const pilihan = getPeriode();
+
+        inputHarian.hidden = pilihan !== 'harian';
+        inputMingguan.hidden = pilihan !== 'mingguan';
+        inputBulanan.hidden = pilihan !== 'bulanan';
+
+        tanggal.disabled = pilihan !== 'harian';
+        tanggal.required = pilihan === 'harian';
+
+        tanggalMingguan.disabled = pilihan !== 'mingguan';
+        tanggalMingguan.required = pilihan === 'mingguan';
+
+        bulan.disabled = pilihan !== 'bulanan';
+        bulan.required = pilihan === 'bulanan';
+    }
+
+    pilihanPeriode.forEach(function (radio) {
+        radio.addEventListener('change', perbaruiInputPeriode);
+    });
+
+    perbaruiInputPeriode();
+
+    // Validasi input sesuai jenis laporan sebelum formulir dikirim.
+    form.addEventListener('submit', function (event) {
+        const pilihan = getPeriode();
+        let inputAktif = null;
+
+        if (pilihan === 'harian') {
+            inputAktif = tanggal;
+        } else if (pilihan === 'mingguan') {
+            inputAktif = tanggalMingguan;
+        } else if (pilihan === 'bulanan') {
+            inputAktif = bulan;
+        }
+
+        if (!inputAktif || !inputAktif.value) {
+            event.preventDefault();
+
+            alert('Silakan pilih periode laporan terlebih dahulu.');
+
+            if (inputAktif) {
+                inputAktif.focus();
+            }
+        }
+    });
+});
+
+function konfirmasiWhatsApp() {
+    const radioTerpilih = document.querySelector(
+        'input[name="periode"]:checked'
+    );
+
+    const periode = radioTerpilih ? radioTerpilih.value : 'harian';
+
+    let keterangan = '';
+
+    if (periode === 'harian') {
         const tanggal = document.getElementById('tanggal').value;
 
         if (!tanggal) {
-
-            alert(
-                'Silakan pilih tanggal laporan terlebih dahulu.'
-            );
-
+            alert('Silakan pilih tanggal laporan terlebih dahulu.');
             return false;
         }
 
-        return confirm(
-            'Kirim rekap laporan kehadiran melalui WhatsApp untuk tanggal ' +
-            tanggal +
-            '?'
-        );
-    }
-</script>
+        keterangan = 'tanggal ' + tanggal;
 
+    } else if (periode === 'mingguan') {
+        const tanggal = document.getElementById('tanggalMingguan').value;
+
+        if (!tanggal) {
+            alert('Silakan pilih tanggal acuan minggu terlebih dahulu.');
+            return false;
+        }
+
+        keterangan = 'minggu berdasarkan tanggal ' + tanggal;
+
+    } else if (periode === 'bulanan') {
+        const bulan = document.getElementById('bulan').value;
+
+        if (!bulan) {
+            alert('Silakan pilih bulan dan tahun laporan.');
+            return false;
+        }
+
+        keterangan = 'bulan ' + bulan;
+    }
+
+    return confirm(
+        'Kirim laporan kehadiran ' +
+        keterangan +
+        ' melalui WhatsApp?'
+    );
+}
+</script>
 
 <?= $this->endSection() ?>

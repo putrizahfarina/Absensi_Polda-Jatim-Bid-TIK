@@ -1,874 +1,542 @@
+
 <?php
+/**
+ * LAPORAN KEHADIRAN PERSONEL
+ * Bidang TIK Polda Jawa Timur
+ * Format Word - A4 Portrait
+ */
+
+$tanggalTampil = $tanggalFormat ?? $tanggal ?? $tanggalLaporan ?? '-';
+
+$dataAbsensi = $dataAbsensi ?? [];
+$rekapStatus = $rekapStatus ?? [];
+$deskripsiKegiatan = $deskripsiKegiatan ?? '';
+$poinApel = $poinApel ?? '';
 
 /*
 |--------------------------------------------------------------------------
-| TEMPLATE LAPORAN WORD
-|--------------------------------------------------------------------------
-| File ini khusus untuk Generate DOC.
-| Digunakan sebagai HTML yang akan dibuka oleh Microsoft Word.
+| Helper
 |--------------------------------------------------------------------------
 */
+
+if (!function_exists('wordEscape')) {
+    function wordEscape($value): string
+    {
+        return htmlspecialchars(
+            (string) ($value ?? '-'),
+            ENT_QUOTES | ENT_SUBSTITUTE,
+            'UTF-8'
+        );
+    }
+}
+
+if (!function_exists('wordImage')) {
+    function wordImage(string $path): string
+    {
+        if (!is_file($path)) {
+            return '';
+        }
+
+        $mime = function_exists('mime_content_type')
+            ? mime_content_type($path)
+            : 'image/png';
+
+        $mime = $mime ?: 'image/png';
+
+        return 'data:' . $mime . ';base64,' .
+            base64_encode(file_get_contents($path));
+    }
+}
 
 /*
 |--------------------------------------------------------------------------
-| LOGO
+| Logo
 |--------------------------------------------------------------------------
+| Sesuaikan nama file dengan logo yang tersedia di folder assets/img.
 */
 
-$logoPoldaSrc = '';
+$logoBidTIKPath = FCPATH . 'assets/img/LOGO_BID_TIK.png';
+$logoPoldaPath = FCPATH . 'assets/img/LOGO_POLDA_JATIM.png';
 
-if (!empty($logoPolda)) {
-    $logoPoldaSrc = 'data:image/png;base64,' . $logoPolda;
-}
-
-$logoBidTikSrc = '';
-
-if (!empty($logoBidTik)) {
-    $logoBidTikSrc = 'data:image/png;base64,' . $logoBidTik;
-}
-
+$logoBidTIK = wordImage($logoBidTIKPath);
+$logoPolda = wordImage($logoPoldaPath);
 
 /*
 |--------------------------------------------------------------------------
-| TOTAL SELURUH STATUS
+| Fungsi pembacaan nilai
 |--------------------------------------------------------------------------
 */
 
-$totalKehadiran = 0;
+$getValue = static function (array $row, array $keys, $default = '-') {
+    foreach ($keys as $key) {
+        if (array_key_exists($key, $row) && $row[$key] !== null) {
+            return $row[$key];
+        }
+    }
 
-foreach ($statusAbsensi as $status) {
-    $totalKehadiran += (int) (
-        $rekapStatus[$status] ?? 0
-    );
-}
+    return $default;
+};
 
+$jumlahPersonel = count($dataAbsensi);
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <title>
-        Laporan Kehadiran Personel
-    </title>
+    <title>Laporan Kehadiran Personel Bid TIK Polda Jawa Timur</title>
 
     <style>
-
-        /*
-        |--------------------------------------------------------------------------
-        | HALAMAN
-        |--------------------------------------------------------------------------
-        */
-
         @page {
             size: A4 portrait;
-            margin: 2cm;
+            margin: 1.2cm 0.9cm 1.2cm 0.9cm;
         }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 10pt;
-            color: #000000;
+            font-size: 9pt;
+            color: #171717;
             margin: 0;
             padding: 0;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         table {
             border-collapse: collapse;
-            border-spacing: 0;
         }
 
+        /* KOP LAPORAN */
 
-        /*
-        |--------------------------------------------------------------------------
-        | HEADER
-        |--------------------------------------------------------------------------
-        |
-        | Header menggunakan tabel 3 kolom.
-        | Logo berada di dalam cell sehingga lebih stabil ketika dibuka di Word.
-        |
-        */
-
-        .header-table {
+        .kop {
             width: 100%;
             table-layout: fixed;
+        }
+
+        .kop td {
             border: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .header-table td {
-            border: none;
-            padding: 0;
-            margin: 0;
             vertical-align: middle;
-        }
-
-        /*
-        | Kolom logo kiri
-        */
-
-        .logo-left {
-            width: 18%;
-            text-align: left;
-            vertical-align: middle;
-        }
-
-        /*
-        | Kolom judul
-        */
-
-        .header-center {
-            width: 64%;
             text-align: center;
-            vertical-align: middle;
-            padding-left: 5px !important;
-            padding-right: 5px !important;
+            padding: 2px;
         }
 
-        /*
-        | Kolom logo kanan
-        */
-
-        .logo-right {
-            width: 18%;
-            text-align: right;
-            vertical-align: middle;
+        .kolom-logo {
+            width: 17%;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOGO
-        |--------------------------------------------------------------------------
-        |
-        | Tidak menggunakan position:absolute.
-        | Tidak menggunakan float.
-        | Tidak menggunakan transform.
-        |
-        | Gambar tetap mengikuti cell tabel.
-        |
-        */
-
-        .logo-bidtik {
-            width: 65px;
-            height: 65px;
-            display: inline-block;
+        .kolom-judul {
+            width: 66%;
         }
 
-        .logo-polda {
-            width: 60px;
-            height: 60px;
-            display: inline-block;
+        .logo {
+            width: 62px;
+            height: 62px;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | JUDUL HEADER
-        |--------------------------------------------------------------------------
-        */
-
-        .title-main {
-            font-size: 15pt;
+        .judul-utama {
+            font-size: 12pt;
             font-weight: bold;
-            line-height: 1.2;
-            margin: 0;
-            padding: 0;
+            line-height: 1.4;
         }
 
-        .title-sub {
-            font-size: 10pt;
+        .judul-instansi {
+            font-size: 8.5pt;
             font-weight: bold;
-            line-height: 1.3;
-            margin-top: 4px;
+            line-height: 1.5;
         }
 
-        .title-location {
-            font-size: 10pt;
-            line-height: 1.3;
-            margin-top: 2px;
+        .garis-kop {
+            border: none;
+            border-top: 2px solid #171717;
+            margin: 8px 0 12px;
         }
 
+        /* INFORMASI TANGGAL */
 
-        /*
-        |--------------------------------------------------------------------------
-        | GARIS HEADER
-        |--------------------------------------------------------------------------
-        */
-
-        .header-line {
-            border-top: 3px solid #b5121b;
-            margin-top: 8px;
-            margin-bottom: 12px;
-            height: 0;
-            line-height: 0;
+        .tanggal {
+            font-size: 9pt;
+            font-weight: bold;
+            margin: 8px 0 12px;
         }
 
+        /* JUDUL BAGIAN */
 
-        /*
-        |--------------------------------------------------------------------------
-        | INFORMASI LAPORAN
-        |--------------------------------------------------------------------------
-        */
+        .judul-bagian {
+            font-size: 9pt;
+            font-weight: bold;
+            margin: 12px 0 6px;
+        }
 
-        .info-table {
+        /* TABEL UTAMA: 9 KOLOM */
+
+        .tabel-absensi {
             width: 100%;
-            margin-bottom: 12px;
             table-layout: fixed;
-        }
-
-        .info-table td {
-            border: none;
-            padding: 3px 0;
-            font-size: 10pt;
-            vertical-align: top;
-        }
-
-        .info-label {
-            width: 18%;
-            font-weight: bold;
-        }
-
-        .info-colon {
-            width: 2%;
-            text-align: center;
-        }
-
-        .info-value {
-            width: 80%;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | JUDUL SECTION
-        |--------------------------------------------------------------------------
-        */
-
-        .section-title {
-            width: 100%;
-            background: #171717;
-            color: #ffffff;
-            font-weight: bold;
-            font-size: 10pt;
-            padding: 6px 8px;
-            margin-top: 12px;
-            margin-bottom: 6px;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TABEL DATA PERSONEL
-        |--------------------------------------------------------------------------
-        */
-
-        .data-table {
-            width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;
         }
 
-        .data-table th {
-            background: #b5121b;
-            color: #ffffff;
-            border: 1px solid #555555;
-            padding: 5px 3px;
-            text-align: center;
-            font-size: 8pt;
-            font-weight: bold;
+        .tabel-absensi th,
+        .tabel-absensi td {
+            border: 1px solid #444444;
+            padding: 4px 2px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 6.8pt;
+            line-height: 1.25;
             vertical-align: middle;
-        }
-
-        .data-table td {
-            border: 1px solid #555555;
-            padding: 5px 3px;
-            font-size: 8pt;
-            vertical-align: middle;
+            overflow-wrap: break-word;
             word-wrap: break-word;
         }
 
-        .center {
+        .tabel-absensi th {
+            background-color: #e6e6e6;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .tengah {
             text-align: center;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | LEBAR KOLOM DATA
-        |--------------------------------------------------------------------------
-        */
-
-        .no {
-            width: 5%;
+        .kiri {
+            text-align: left;
         }
 
-        .nrp {
-            width: 14%;
-        }
+        /* REKAPITULASI */
 
-        .nama {
-            width: 21%;
-        }
-
-        .pangkat {
-            width: 13%;
-        }
-
-        .unit {
-            width: 19%;
-        }
-
-        .status {
-            width: 15%;
-        }
-
-        .waktu {
-            width: 13%;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | REKAPITULASI
-        |--------------------------------------------------------------------------
-        */
-
-        .rekap-table {
-            width: 100%;
-            border-collapse: collapse;
+        .tabel-rekap {
+            width: 65%;
             table-layout: fixed;
+            margin-top: 4px;
         }
 
-        .rekap-table th {
-            background: #171717;
-            color: #ffffff;
-            border: 1px solid #555555;
-            padding: 5px 2px;
+        .tabel-rekap th,
+        .tabel-rekap td {
+            border: 1px solid #444444;
+            padding: 5px 7px;
+            font-size: 8pt;
+        }
+
+        .tabel-rekap th {
+            background-color: #e6e6e6;
             text-align: center;
-            font-size: 7pt;
-            font-weight: bold;
-            vertical-align: middle;
-        }
-
-        .rekap-table td {
-            border: 1px solid #555555;
-            padding: 6px 2px;
-            text-align: center;
-            font-size: 9pt;
             font-weight: bold;
         }
 
-        .rekap-total {
-            background: #eeeeee;
-            font-weight: bold;
-        }
+        /* DESKRIPSI DAN POIN APEL */
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | POIN HASIL APEL
-        |--------------------------------------------------------------------------
-        */
-
-        .apel-table {
+        .kotak-keterangan {
             width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        .apel-table td {
-            border: 1px solid #555555;
+            border: 1px solid #444444;
             padding: 8px;
             font-size: 9pt;
-            vertical-align: top;
+            line-height: 1.5;
+            white-space: normal;
+            overflow-wrap: break-word;
+            min-height: 35px;
         }
 
-        .apel-label {
-            width: 20%;
-            font-weight: bold;
-        }
+        /* TANDA TANGAN */
 
-        .apel-content {
-            width: 80%;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TANDA TANGAN
-        |--------------------------------------------------------------------------
-        */
-
-        .signature-table {
+        .tabel-ttd {
             width: 100%;
-            margin-top: 30px;
-            border: none;
+            margin-top: 20px;
             table-layout: fixed;
+            page-break-inside: avoid;
         }
 
-        .signature-table td {
+        .tabel-ttd td {
+            width: 50%;
             border: none;
             text-align: center;
             vertical-align: top;
+            padding: 0 8px;
             font-size: 9pt;
+            line-height: 1.5;
         }
 
-        .signature-left {
-            width: 50%;
-        }
-
-        .signature-right {
-            width: 50%;
-        }
-
-        .signature-space {
+        .ruang-ttd {
             height: 55px;
-            line-height: 55px;
         }
 
-        .signature-name {
+        .nama-pejabat {
             font-weight: bold;
             text-decoration: underline;
         }
 
+        .catatan {
+            margin-top: 5px;
+            font-size: 8pt;
+        }
     </style>
-
 </head>
-
 
 <body>
 
+    <!-- =====================================================
+         KOP LAPORAN
+    ====================================================== -->
 
-<!--
-|--------------------------------------------------------------------------
-| HEADER
-|--------------------------------------------------------------------------
-|
-| PENTING:
-| Logo berada di dalam tabel.
-| Tidak menggunakan position / float.
-|
--->
-
-<table class="header-table">
-
-    <tr>
-
-        <!-- =========================================================
-             LOGO BID TIK
-        ========================================================== -->
-
-        <td class="logo-left">
-
-            <?php if (!empty($logoBidTikSrc)): ?>
-
-                <img
-                    src="<?= $logoBidTikSrc ?>"
-                    width="65"
-                    height="65"
-                    class="logo-bidtik"
-                    alt="Logo Bid TIK">
-
-            <?php endif; ?>
-
-        </td>
-
-
-        <!-- =========================================================
-             JUDUL
-        ========================================================== -->
-
-        <td class="header-center">
-
-            <div class="title-main">
-                LAPORAN KEHADIRAN PERSONEL
-            </div>
-
-            <div class="title-sub">
-                BIDANG TEKNOLOGI INFORMASI DAN KOMUNIKASI
-            </div>
-
-            <div class="title-location">
-                POLDA JAWA TIMUR
-            </div>
-
-        </td>
-
-
-        <!-- =========================================================
-             LOGO POLDA
-        ========================================================== -->
-
-        <td class="logo-right">
-
-            <?php if (!empty($logoPoldaSrc)): ?>
-
-                <img
-                    src="<?= $logoPoldaSrc ?>"
-                    width="60"
-                    height="60"
-                    class="logo-polda"
-                    alt="Logo Polda Jawa Timur">
-
-            <?php endif; ?>
-
-        </td>
-
-    </tr>
-
-</table>
-
-
-<!-- GARIS HEADER -->
-
-<div class="header-line"></div>
-
-
-<!-- ================================================================
-     INFORMASI LAPORAN
-================================================================ -->
-
-<table class="info-table">
-
-    <tr>
-
-        <td class="info-label">
-            Tanggal
-        </td>
-
-        <td class="info-colon">
-            :
-        </td>
-
-        <td class="info-value">
-
-            <?= esc(
-                $tanggalFormat ??
-                $tanggal ??
-                '-'
-            ) ?>
-
-        </td>
-
-    </tr>
-
-
-    <tr>
-
-        <td class="info-label">
-            Jenis Laporan
-        </td>
-
-        <td class="info-colon">
-            :
-        </td>
-
-        <td class="info-value">
-            Rekapitulasi Kehadiran Personel
-        </td>
-
-    </tr>
-
-</table>
-
-
-<!-- ================================================================
-     DATA KEHADIRAN
-================================================================ -->
-
-<div class="section-title">
-    DATA KEHADIRAN PERSONEL
-</div>
-
-
-<table class="data-table">
-
-    <thead>
-
+    <table class="kop">
         <tr>
-
-            <th class="no">
-                No.
-            </th>
-
-            <th class="nrp">
-                NRP/NIP
-            </th>
-
-            <th class="nama">
-                Nama
-            </th>
-
-            <th class="pangkat">
-                Pangkat
-            </th>
-
-            <th class="unit">
-                Unit Kerja
-            </th>
-
-            <th class="status">
-                Status
-            </th>
-
-            <th class="waktu">
-                Waktu
-            </th>
-
-        </tr>
-
-    </thead>
-
-
-    <tbody>
-
-        <?php if (!empty($dataAbsensi)): ?>
-
-            <?php $no = 1; ?>
-
-            <?php foreach ($dataAbsensi as $row): ?>
-
-                <tr>
-
-                    <td class="center">
-                        <?= $no++ ?>
-                    </td>
-
-                    <td>
-                        <?= esc(
-                            $row['nrp_nip'] ?? '-'
-                        ) ?>
-                    </td>
-
-                    <td>
-                        <?= esc(
-                            $row['nama'] ?? '-'
-                        ) ?>
-                    </td>
-
-                    <td>
-                        <?= esc(
-                            $row['pangkat'] ?? '-'
-                        ) ?>
-                    </td>
-
-                    <td>
-                        <?= esc(
-                            $row['satker'] ?? '-'
-                        ) ?>
-                    </td>
-
-                    <td class="center">
-
-                        <?= esc(
-                            !empty($row['status'])
-                                ? $row['status']
-                                : 'BELUM ABSEN'
-                        ) ?>
-
-                    </td>
-
-                    <td class="center">
-
-                        <?php if (
-                            !empty($row['waktu_masuk'])
-                        ): ?>
-
-                            <?php
-
-                            try {
-
-                                echo date(
-                                    'H:i',
-                                    strtotime(
-                                        $row['waktu_masuk']
-                                    )
-                                );
-
-                            } catch (\Throwable $e) {
-
-                                echo '-';
-
-                            }
-
-                            ?>
-
-                        <?php else: ?>
-
-                            -
-
-                        <?php endif; ?>
-
-                    </td>
-
-                </tr>
-
-            <?php endforeach; ?>
-
-        <?php else: ?>
-
-            <tr>
-
-                <td
-                    colspan="7"
-                    class="center">
-
-                    Tidak terdapat data kehadiran.
-
-                </td>
-
-            </tr>
-
-        <?php endif; ?>
-
-    </tbody>
-
-</table>
-
-
-<!-- ================================================================
-     REKAPITULASI
-================================================================ -->
-
-<div class="section-title">
-    REKAPITULASI KEHADIRAN
-</div>
-
-
-<table class="rekap-table">
-
-    <thead>
-
-        <tr>
-
-            <?php foreach (
-                $statusAbsensi
-                as $status
-            ): ?>
-
-                <th>
-                    <?= esc($status) ?>
-                </th>
-
-            <?php endforeach; ?>
-
-            <th>
-                TOTAL
-            </th>
-
-        </tr>
-
-    </thead>
-
-
-    <tbody>
-
-        <tr>
-
-            <?php foreach (
-                $statusAbsensi
-                as $status
-            ): ?>
-
-                <td>
-
-                    <?= (int) (
-                        $rekapStatus[$status]
-                        ?? 0
-                    ) ?>
-
-                </td>
-
-            <?php endforeach; ?>
-
-
-            <td class="rekap-total">
-
-                <?= $totalKehadiran ?>
-
+            <td class="kolom-logo">
+                <?php if ($logoBidTIK !== ''): ?>
+                    <img
+                        src="<?= $logoBidTIK ?>"
+                        class="logo"
+                        alt="Logo Bid TIK"
+                    >
+                <?php endif; ?>
             </td>
 
+            <td class="kolom-judul">
+                <div class="judul-utama">
+                    LAPORAN KEHADIRAN PERSONEL
+                </div>
+
+                <div class="judul-instansi">
+                    BIDANG TEKNOLOGI INFORMASI DAN KOMUNIKASI<br>
+                    POLDA JAWA TIMUR
+                </div>
+            </td>
+
+            <td class="kolom-logo">
+                <?php if ($logoPolda !== ''): ?>
+                    <img
+                        src="<?= $logoPolda ?>"
+                        class="logo"
+                        alt="Logo Polda Jawa Timur"
+                    >
+                <?php endif; ?>
+            </td>
         </tr>
+    </table>
 
-    </tbody>
+    <hr class="garis-kop">
 
-</table>
+    <!-- =====================================================
+         TANGGAL LAPORAN
+    ====================================================== -->
 
+    <div class="tanggal">
+        HARI/TANGGAL: <?= wordEscape($tanggalTampil) ?>
+    </div>
 
-<!-- ================================================================
-     POIN HASIL APEL
-================================================================ -->
+    <!-- =====================================================
+         A. TABEL KEHADIRAN PERSONEL
+         TOTAL 9 KOLOM, MENYESUAIKAN PDF
+    ====================================================== -->
 
-<div class="section-title">
-    POIN HASIL APEL
-</div>
+    <div class="judul-bagian">
+        A. DATA KEHADIRAN PERSONEL
+    </div>
 
+    <table class="tabel-absensi">
+        <thead>
+            <tr>
+                <th style="width: 4%;">NO</th>
+                <th style="width: 14%;">NAMA</th>
+                <th style="width: 11%;">PANGKAT</th>
+                <th style="width: 12%;">NRP</th>
+                <th style="width: 11%;">SUBBID</th>
+                <th style="width: 7%;">UR</th>
+                <th style="width: 11%;">STATUS</th>
+                <th style="width: 17%;">KETERANGAN</th>
+                <th style="width: 13%;">WAKTU</th>
+            </tr>
+        </thead>
 
-<table class="apel-table">
+        <tbody>
+            <?php if (!empty($dataAbsensi)): ?>
 
-    <tr>
+                <?php foreach ($dataAbsensi as $index => $row): ?>
 
-        <td class="apel-label">
-            Hasil/Poin Apel
-        </td>
+                    <tr>
+                        <td class="tengah">
+                            <?= $index + 1 ?>
+                        </td>
 
-        <td class="apel-content">
+                        <td>
+                            <?= wordEscape(
+                                $getValue($row, ['nama'])
+                            ) ?>
+                        </td>
 
-            <?php if (!empty($poinApel)): ?>
+                        <td>
+                            <?= wordEscape(
+                                $getValue($row, ['pangkat'])
+                            ) ?>
+                        </td>
 
-                <?= nl2br(
-                    esc($poinApel)
-                ) ?>
+                        <td>
+                            <?= wordEscape(
+                                $getValue($row, ['nrp_nip', 'nrp', 'nip'])
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <?= wordEscape(
+                                $getValue($row, ['subbid', 'nama_subbid'])
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <?= wordEscape(
+                                $getValue($row, ['ur', 'nama_ur'])
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <?= wordEscape(
+                                $getValue($row, ['status'])
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <?= wordEscape(
+                                $getValue($row, ['keterangan', 'catatan'])
+                            ) ?>
+                        </td>
+
+                        <td class="tengah">
+                            <?= wordEscape(
+                                $getValue(
+                                    $row,
+                                    ['waktu_masuk', 'waktu', 'jam_masuk']
+                                )
+                            ) ?>
+                        </td>
+                    </tr>
+
+                <?php endforeach; ?>
 
             <?php else: ?>
 
-                -
+                <tr>
+                    <td colspan="9" class="tengah">
+                        Tidak ada data kehadiran pada tanggal ini.
+                    </td>
+                </tr>
 
             <?php endif; ?>
+        </tbody>
+    </table>
 
-        </td>
+    <div class="catatan">
+        Jumlah data personel: <?= $jumlahPersonel ?> orang.
+    </div>
 
-    </tr>
+    <!-- =====================================================
+         B. REKAPITULASI KEHADIRAN
+    ====================================================== -->
 
-</table>
+    <div class="judul-bagian">
+        B. REKAPITULASI KEHADIRAN
+    </div>
 
+    <table class="tabel-rekap">
+        <thead>
+            <tr>
+                <th style="width: 70%;">STATUS KEHADIRAN</th>
+                <th style="width: 30%;">JUMLAH</th>
+            </tr>
+        </thead>
 
-<!-- ================================================================
-     TANDA TANGAN
-================================================================ -->
+        <tbody>
+            <?php if (!empty($rekapStatus)): ?>
 
-<table class="signature-table">
+                <?php foreach ($rekapStatus as $status => $jumlah): ?>
 
-    <tr>
+                    <tr>
+                        <td>
+                            <?= wordEscape($status) ?>
+                        </td>
 
-        <td class="signature-left">
-            &nbsp;
-        </td>
+                        <td class="tengah">
+                            <?= wordEscape($jumlah) ?>
+                        </td>
+                    </tr>
 
-        <td class="signature-right">
+                <?php endforeach; ?>
 
-            Mengetahui,
+            <?php else: ?>
 
-            <div class="signature-space">
-                &nbsp;
-            </div>
+                <tr>
+                    <td colspan="2" class="tengah">
+                        Data rekapitulasi belum tersedia.
+                    </td>
+                </tr>
 
-            <div class="signature-name">
-                __________________________
-            </div>
+            <?php endif; ?>
+        </tbody>
+    </table>
 
-        </td>
+    <!-- =====================================================
+         C. DESKRIPSI KEGIATAN
+    ====================================================== -->
 
-    </tr>
+    <div class="judul-bagian">
+        C. DESKRIPSI KEGIATAN
+    </div>
 
-</table>
+    <div class="kotak-keterangan">
+        <?php if (trim((string) $deskripsiKegiatan) !== ''): ?>
+            <?= nl2br(wordEscape($deskripsiKegiatan)) ?>
+        <?php else: ?>
+            -
+        <?php endif; ?>
+    </div>
 
+    <!-- =====================================================
+         D. POIN HASIL APEL
+    ====================================================== -->
+
+    <div class="judul-bagian">
+        D. POIN HASIL APEL
+    </div>
+
+    <div class="kotak-keterangan">
+        <?php if (trim((string) $poinApel) !== ''): ?>
+            <?= nl2br(wordEscape($poinApel)) ?>
+        <?php else: ?>
+            -
+        <?php endif; ?>
+    </div>
+
+    <!-- =====================================================
+         TANDA TANGAN
+    ====================================================== -->
+
+    <table class="tabel-ttd">
+        <tr>
+            <td>
+                Mengetahui,<br>
+                Penanggung Jawab
+
+                <div class="ruang-ttd"></div>
+
+                <div class="nama-pejabat">
+                    (........................................)
+                </div>
+
+                NRP/NIP. ................................
+            </td>
+
+            <td>
+                Jawa Timur, <?= wordEscape($tanggalTampil) ?><br>
+                Petugas Pelapor
+
+                <div class="ruang-ttd"></div>
+
+                <div class="nama-pejabat">
+                    (........................................)
+                </div>
+
+                NRP/NIP. ................................
+            </td>
+        </tr>
+    </table>
 
 </body>
-
 </html>

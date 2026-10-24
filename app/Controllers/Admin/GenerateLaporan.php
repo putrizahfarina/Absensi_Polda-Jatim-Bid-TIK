@@ -3,9 +3,9 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Models\DeskripsiKegiatanModel;
 use App\Models\PersonelModel;
 use App\Models\PresensiModel;
-use CodeIgniter\I18n\Time;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\SimpleType\Jc;
@@ -15,6 +15,18 @@ class GenerateLaporan extends BaseController
 {
     protected PersonelModel $personelModel;
     protected PresensiModel $presensiModel;
+
+    private array $statusAbsensi = [
+        'HADIR',
+        'DINAS LUAR',
+        'LEPAS DINAS',
+        'CUTI',
+        'SAKIT',
+        'IZIN',
+        'TERLAMBAT',
+        'DIK',
+        'BKO',
+    ];
 
     public function __construct()
     {
@@ -28,9 +40,7 @@ class GenerateLaporan extends BaseController
 
     public function index()
     {
-        $personel = $this->personelModel
-            ->where('deleted_at', null)
-            ->findAll();
+        $personel = $this->ambilPersonel();
 
         return view(
             'admin/generate-laporan/generate-laporan',
@@ -48,194 +58,228 @@ class GenerateLaporan extends BaseController
 
     public function generateLaporan()
     {
-        $tanggal = $this->request->getPost('tanggal');
-        $type = $this->request->getPost('type') ?? 'pdf';
-
-        // Validasi tanggal
-        if (empty($tanggal)) {
-            return redirect()
-                ->to('/admin/laporan')
-                ->with(
-                    'msg',
-                    'Tanggal laporan belum dipilih!'
-                );
-        }
-
-        $tanggalValid = \DateTime::createFromFormat(
-            'Y-m-d',
-            $tanggal
+        $tanggal = trim(
+            (string) ($this->request->getPost('tanggal') ?? '')
         );
 
-        if (
-            !$tanggalValid ||
-            $tanggalValid->format('Y-m-d') !== $tanggal
-        ) {
+        $type = strtolower(
+            trim((string) ($this->request->getPost('type') ?? 'pdf'))
+        );
+
+        $periode = strtolower(
+            trim((string) ($this->request->getPost('periode') ?? 'harian'))
+        );
+
+        if (!$this->tanggalValid($tanggal)) {
             return redirect()
                 ->to('/admin/laporan')
-                ->with(
-                    'msg',
-                    'Format tanggal laporan tidak valid!'
-                );
+                ->with('msg', 'Tanggal laporan tidak valid.');
         }
 
-        // Ambil seluruh personel aktif
-        $personel = $this->personelModel
-            ->where('deleted_at', null)
-            ->findAll();
-
-        if (empty($personel)) {
+        if (!in_array($type, ['pdf', 'doc', 'docx'], true)) {
             return redirect()
                 ->to('/admin/laporan')
-                ->with(
-                    'msg',
-                    'Data personel kosong!'
-                );
+                ->with('msg', 'Format laporan tidak dikenali.');
         }
 
-        // Status absensi yang digunakan sistem
-        $statusAbsensi = [
-            'HADIR',
-            'DINAS',
-            'LEPAS DINAS',
-            'CUTI',
-            'SAKIT',
-            'IZIN',
-            'TERLAMBAT',
-            'DIK',
-            'BKO',
-        ];
+        if (!in_array($periode, ['harian', 'mingguan', 'bulanan'], true)) {
+            return redirect()
+                ->to('/admin/laporan')
+                ->with('msg', 'Periode laporan tidak dikenali.');
+        }
 
-        // Ambil data presensi berdasarkan tanggal
-        $presensi = $this->presensiModel
-            ->where(
-                'waktu_masuk >=',
-                $tanggal . ' 00:00:00'
-            )
-            ->where(
-                'waktu_masuk <=',
-                $tanggal . ' 23:59:59'
-            )
-            ->findAll();
+        if ($periode === 'mingguan' || $periode === 'bulanan') {
+            return $this->generateLaporanPeriode(
+                $tanggal,
+                $periode,
+                $type
+            );
+        }
 
-        // ====================================================
-        // REKAP STATUS
-        // ====================================================
+        return $this->generateLaporanHarian($tanggal, $type);
+    }
 
-        $rekapStatus = [];
+    // ========================================================
+    // VALIDASI TANGGAL
+    // ========================================================
 
-        foreach ($statusAbsensi as $status) {
-            $rekapStatus[$status] = 0;
+    private function tanggalValid(string $tanggal): bool
+    {
+        $date = \DateTime::createFromFormat('!Y-m-d', $tanggal);
+
+        return $date !== false
+            && $date->format('Y-m-d') === $tanggal;
+    }
+
+    // ========================================================
+    // NORMALISASI STATUS
+    // ========================================================
+
+    private function normalisasiStatus(string $status): string
+    {
+        $status = strtoupper(trim($status));
+        $status = preg_replace('/\s+/', ' ', $status) ?? '';
+
+        // Menyamakan penamaan status lama dengan kategori laporan.
+        if ($status === 'DINAS') {
+            return 'DINAS LUAR';
+        }
+
+        return $status;
+    }
+
+    // ========================================================
+    // REKAP STATUS SELURUH PRESENSI
+    // ========================================================
+
+    private function hitungRekapStatus(array $presensi): array
+    {
+        $rekap = [];
+
+        foreach ($this->statusAbsensi as $status) {
+            $rekap[$status] = 0;
         }
 
         foreach ($presensi as $absen) {
-            $statusDatabase = strtoupper(
-                trim($absen['status'] ?? '')
+            $status = $this->normalisasiStatus(
+                (string) ($absen['status'] ?? '')
             );
 
-            if (isset($rekapStatus[$statusDatabase])) {
-                $rekapStatus[$statusDatabase]++;
+            if (array_key_exists($status, $rekap)) {
+                $rekap[$status]++;
             }
         }
 
-        // ====================================================
-        // GABUNGKAN DATA PERSONEL + PRESENSI
-        // ====================================================
+        return $rekap;
+    }
 
-        $dataAbsensi = [];
+    // ========================================================
+    // FORMAT TANGGAL INDONESIA
+    // ========================================================
 
-        foreach ($personel as $p) {
+    private function formatTanggalIndonesia(string $tanggal): string
+    {
+        $hari = [
+            'Sunday' => 'Minggu',
+            'Monday' => 'Senin',
+            'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu',
+            'Thursday' => 'Kamis',
+            'Friday' => 'Jumat',
+            'Saturday' => 'Sabtu',
+        ];
 
-            $dataPersonel = [
-                'personel_id' => $p['id'] ?? null,
-                'nrp_nip' => $p['nrp_nip'] ?? '-',
-                'nama' => $p['nama'] ?? '-',
-                'pangkat' => $p['pangkat'] ?? '-',
-                'jabatan' => $p['jabatan'] ?? '-',
-                'satker' => $p['satker'] ?? '-',
-                'jenis_kelamin' => $p['jenis_kelamin'] ?? '-',
-                'status' => null,
-                'waktu_masuk' => null,
-            ];
+        $bulan = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
+        ];
 
-            foreach ($presensi as $absen) {
+        $timestamp = strtotime($tanggal);
 
-                if (
-                    isset($absen['personel_id']) &&
-                    $absen['personel_id'] == ($p['id'] ?? null)
-                ) {
-                    $dataPersonel['status'] = strtoupper(
-                        trim($absen['status'] ?? '')
-                    );
-
-                    $dataPersonel['waktu_masuk'] =
-                        $absen['waktu_masuk'] ?? null;
-
-                    break;
-                }
-            }
-
-            $dataAbsensi[] = $dataPersonel;
+        if ($timestamp === false) {
+            return $tanggal;
         }
 
-        // ====================================================
-        // FORMAT TANGGAL
-        // ====================================================
+        return $hari[date('l', $timestamp)] . ', '
+            . date('d', $timestamp) . ' '
+            . $bulan[(int) date('n', $timestamp)] . ' '
+            . date('Y', $timestamp);
+    }
 
-        try {
-            $tanggalFormat = Time::parse(
-                $tanggal,
-                locale: 'id'
-            )->toLocalizedString(
-                'dd MMMM yyyy'
-            );
-        } catch (\Throwable $e) {
-            $tanggalFormat = $tanggal;
+    private function formatTanggalPendek(string $tanggal): string
+    {
+        $bulan = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
+        ];
+
+        $timestamp = strtotime($tanggal);
+
+        if ($timestamp === false) {
+            return $tanggal;
         }
 
-        // ====================================================
-        // LOGO POLDA
-        // ====================================================
+        return date('d', $timestamp) . ' '
+            . $bulan[(int) date('n', $timestamp)] . ' '
+            . date('Y', $timestamp);
+    }
 
-        $logoPoldaPath =
-            FCPATH .
-            'assets/img/LOGO_POLDA_JATIM.png';
+    // ========================================================
+    // RENTANG TANGGAL LAPORAN
+    // ========================================================
+
+    private function rentangPeriode(
+        string $tanggal,
+        string $periode
+    ): array {
+        $date = new \DateTimeImmutable($tanggal);
+
+        if ($periode === 'mingguan') {
+            // Minggu kerja: Senin sampai Jumat.
+            $hari = (int) $date->format('N');
+
+            $mulai = $date->modify('-' . ($hari - 1) . ' days');
+            $akhir = $mulai->modify('+4 days');
+        } else {
+            $mulai = $date->modify('first day of this month');
+            $akhir = $date->modify('last day of this month');
+        }
+
+        return [
+            $mulai->format('Y-m-d'),
+            $akhir->format('Y-m-d'),
+        ];
+    }
+
+    // ========================================================
+    // AMBIL LOGO
+    // ========================================================
+
+    private function ambilLogo(): array
+    {
+        $logoPoldaPath = FCPATH . 'assets/img/LOGO_POLDA_JATIM.png';
 
         if (!is_file($logoPoldaPath)) {
             $logoPoldaPath = null;
         }
 
-        // ====================================================
-        // LOGO BID TIK
-        // ====================================================
-
         $logoBidTikPath = null;
-
-        $folderLogo =
-            FCPATH .
-            'assets/img/';
+        $folderLogo = FCPATH . 'assets/img/';
 
         if (is_dir($folderLogo)) {
-
-            $files = glob(
-                $folderLogo . '*'
-            );
+            $files = glob($folderLogo . '*');
 
             if ($files !== false) {
-
                 foreach ($files as $file) {
-
                     if (!is_file($file)) {
                         continue;
                     }
 
-                    $namaFile =
-                        strtolower(
-                            basename($file)
-                        );
+                    $namaFile = strtolower(basename($file));
 
                     if (
-                        strpos($namaFile, 'bid') !== false &&
-                        strpos($namaFile, 'tik') !== false
+                        strpos($namaFile, 'bid') !== false
+                        && strpos($namaFile, 'tik') !== false
                     ) {
                         $logoBidTikPath = $file;
                         break;
@@ -244,94 +288,369 @@ class GenerateLaporan extends BaseController
             }
         }
 
-        // ====================================================
-        // DATA LAPORAN
-        // ====================================================
+        return [$logoBidTikPath, $logoPoldaPath];
+    }
+
+    // ========================================================
+    // AMBIL DESKRIPSI KEGIATAN
+    // ========================================================
+
+    private function ambilDeskripsi(
+        string $tanggalMulai,
+        string $tanggalAkhir
+    ): string {
+        $model = new DeskripsiKegiatanModel();
+
+        $data = $model
+            ->where('tanggal >=', $tanggalMulai)
+            ->where('tanggal <=', $tanggalAkhir)
+            ->orderBy('tanggal', 'ASC')
+            ->findAll();
+
+        $hasil = [];
+
+        foreach ($data as $item) {
+            $deskripsi = trim(
+                (string) ($item['deskripsi'] ?? '')
+            );
+
+            if ($deskripsi === '' || $deskripsi === '-') {
+                continue;
+            }
+
+            if ($tanggalMulai !== $tanggalAkhir) {
+                $hasil[] = $this->formatTanggalPendek(
+                    (string) $item['tanggal']
+                ) . ': ' . $deskripsi;
+            } else {
+                $hasil[] = $deskripsi;
+            }
+        }
+
+        return empty($hasil) ? '-' : implode("\n", $hasil);
+    }
+
+    // ========================================================
+    // DATA PERSONEL AKTIF
+    // ========================================================
+
+    private function ambilPersonel(): array
+    {
+        return $this->personelModel
+            ->where('deleted_at', null)
+            ->findAll();
+    }
+
+    // ========================================================
+    // LAPORAN HARIAN
+    // ========================================================
+
+    private function generateLaporanHarian(
+        string $tanggal,
+        string $type
+    ) {
+        $personel = $this->ambilPersonel();
+
+        if (empty($personel)) {
+            return redirect()
+                ->to('/admin/laporan')
+                ->with('msg', 'Data personel kosong.');
+        }
+
+        $presensi = $this->presensiModel
+            ->where('waktu_masuk >=', $tanggal . ' 00:00:00')
+            ->where('waktu_masuk <=', $tanggal . ' 23:59:59')
+            ->orderBy('waktu_masuk', 'ASC')
+            ->findAll();
+
+        $rekapStatus = $this->hitungRekapStatus($presensi);
+
+        /*
+         * Jika terdapat beberapa catatan pada hari yang sama,
+         * data tabel harian memakai catatan presensi terakhir.
+         */
+        $presensiByPersonel = [];
+
+        foreach ($presensi as $absen) {
+            $id = (string) ($absen['personel_id'] ?? '');
+
+            if ($id !== '') {
+                $presensiByPersonel[$id] = $absen;
+            }
+        }
+
+        $dataAbsensi = [];
+
+        foreach ($personel as $p) {
+            $id = (string) ($p['id'] ?? '');
+            $absen = $presensiByPersonel[$id] ?? null;
+
+            $dataAbsensi[] = [
+                'personel_id' => $p['id'] ?? null,
+                'nrp_nip' => $p['nrp_nip'] ?? '-',
+                'nama' => $p['nama'] ?? '-',
+                'pangkat' => $p['pangkat'] ?? '-',
+                'subbid' => $p['subbid'] ?? '-',
+                'ur' => $p['ur'] ?? '-',
+                'jabatan' => $p['jabatan'] ?? '-',
+                'satker' => $p['satker'] ?? '-',
+                'jenis_kelamin' => $p['jenis_kelamin'] ?? '-',
+                'status' => $absen
+                    ? $this->normalisasiStatus(
+                        (string) ($absen['status'] ?? '')
+                    )
+                    : null,
+                'waktu_masuk' => $absen['waktu_masuk'] ?? null,
+                'keterangan' => $absen['keterangan'] ?? '-',
+            ];
+        }
+
+        return $this->keluarkanLaporan(
+            $tanggal,
+            $tanggal,
+            'harian',
+            $type,
+            $dataAbsensi,
+            $presensi,
+            $rekapStatus
+        );
+    }
+
+    // ========================================================
+    // LAPORAN MINGGUAN DAN BULANAN
+    // ========================================================
+
+    private function generateLaporanPeriode(
+        string $tanggal,
+        string $periode,
+        string $type
+    ) {
+        $personel = $this->ambilPersonel();
+
+        if (empty($personel)) {
+            return redirect()
+                ->to('/admin/laporan')
+                ->with('msg', 'Data personel kosong.');
+        }
+
+        [$tanggalMulai, $tanggalAkhir] = $this->rentangPeriode(
+            $tanggal,
+            $periode
+        );
+
+        $presensi = $this->presensiModel
+            ->where('waktu_masuk >=', $tanggalMulai . ' 00:00:00')
+            ->where('waktu_masuk <=', $tanggalAkhir . ' 23:59:59')
+            ->orderBy('waktu_masuk', 'ASC')
+            ->findAll();
+
+        /*
+         * Rekap keseluruhan dihitung dari semua catatan presensi
+         * pada periode yang dipilih.
+         */
+        $rekapStatus = $this->hitungRekapStatus($presensi);
+
+        $presensiByPersonel = [];
+
+        foreach ($presensi as $absen) {
+            $id = (string) ($absen['personel_id'] ?? '');
+
+            if ($id === '') {
+                continue;
+            }
+
+            $presensiByPersonel[$id][] = $absen;
+        }
+
+        $dataAbsensi = [];
+
+        foreach ($personel as $p) {
+            $id = (string) ($p['id'] ?? '');
+            $daftarPresensi = $presensiByPersonel[$id] ?? [];
+
+            // Jumlah setiap status per personel.
+            $jumlahStatus = [];
+
+            // Daftar waktu presensi per personel.
+            $waktuPeriode = [];
+
+            // Daftar keterangan unik.
+            $keteranganPeriode = [];
+
+            foreach ($daftarPresensi as $absen) {
+                $status = $this->normalisasiStatus(
+                    (string) ($absen['status'] ?? '')
+                );
+
+                if ($status !== '') {
+                    if (!isset($jumlahStatus[$status])) {
+                        $jumlahStatus[$status] = 0;
+                    }
+
+                    $jumlahStatus[$status]++;
+                }
+
+                $waktu = trim(
+                    (string) ($absen['waktu_masuk'] ?? '')
+                );
+
+                if ($waktu !== '') {
+                    $timestamp = strtotime($waktu);
+
+                    if ($timestamp !== false) {
+                        $waktuPeriode[] =
+                            date('d/m', $timestamp)
+                            . ' '
+                            . date('H:i', $timestamp);
+                    }
+                }
+
+                $keterangan = trim(
+                    (string) ($absen['keterangan'] ?? '')
+                );
+
+                if ($keterangan !== '' && $keterangan !== '-') {
+                    $keteranganPeriode[] = $keterangan;
+                }
+            }
+
+            /*
+             * Contoh hasil:
+             * HADIR: 3
+             * SAKIT: 2
+             * DINAS LUAR: 1
+             */
+            $statusRingkas = [];
+
+            // Tampilkan status sesuai urutan kategori laporan.
+            foreach ($this->statusAbsensi as $status) {
+                $jumlah = $jumlahStatus[$status] ?? 0;
+
+                if ($jumlah > 0) {
+                    $statusRingkas[] = $status . ': ' . $jumlah;
+                }
+            }
+
+            // Status tambahan tetap ditampilkan jika ada di database.
+            foreach ($jumlahStatus as $status => $jumlah) {
+                if (
+                    !in_array($status, $this->statusAbsensi, true)
+                    && $jumlah > 0
+                ) {
+                    $statusRingkas[] = $status . ': ' . $jumlah;
+                }
+            }
+
+            $dataAbsensi[] = [
+                'personel_id' => $p['id'] ?? null,
+                'nrp_nip' => $p['nrp_nip'] ?? '-',
+                'nama' => $p['nama'] ?? '-',
+                'pangkat' => $p['pangkat'] ?? '-',
+                'subbid' => $p['subbid'] ?? '-',
+                'ur' => $p['ur'] ?? '-',
+                'jabatan' => $p['jabatan'] ?? '-',
+                'satker' => $p['satker'] ?? '-',
+                'jenis_kelamin' => $p['jenis_kelamin'] ?? '-',
+
+                'status' => empty($statusRingkas)
+                    ? 'BELUM ADA PRESENSI'
+                    : implode("\n", $statusRingkas),
+
+                'waktu_masuk' => empty($waktuPeriode)
+                    ? null
+                    : implode("\n", $waktuPeriode),
+
+                'keterangan' => empty($keteranganPeriode)
+                    ? '-'
+                    : implode("\n", array_unique($keteranganPeriode)),
+            ];
+        }
+
+        return $this->keluarkanLaporan(
+            $tanggalMulai,
+            $tanggalAkhir,
+            $periode,
+            $type,
+            $dataAbsensi,
+            $presensi,
+            $rekapStatus
+        );
+    }
+
+    // ========================================================
+    // OUTPUT PDF / WORD
+    // ========================================================
+
+    private function keluarkanLaporan(
+        string $tanggalMulai,
+        string $tanggalAkhir,
+        string $periode,
+        string $type,
+        array $dataAbsensi,
+        array $presensi,
+        array $rekapStatus
+    ) {
+        [$logoBidTikPath, $logoPoldaPath] = $this->ambilLogo();
+
+        $tanggalFormat = $periode === 'harian'
+            ? $this->formatTanggalIndonesia($tanggalMulai)
+            : $this->formatTanggalPendek($tanggalMulai)
+                . ' - '
+                . $this->formatTanggalPendek($tanggalAkhir);
+
+        $deskripsiKegiatan = $this->ambilDeskripsi(
+            $tanggalMulai,
+            $tanggalAkhir
+        );
 
         $data = [
             'title' => 'Laporan Kehadiran Personel',
-            'tanggal' => $tanggal,
+            'tanggal' => $tanggalMulai,
             'tanggalFormat' => $tanggalFormat,
-            'personel' => $personel,
+            'tanggalTampil' => $tanggalFormat,
+            'tanggalMulai' => $tanggalMulai,
+            'tanggalAkhir' => $tanggalAkhir,
+            'periode' => $periode,
+            'personel' => $this->ambilPersonel(),
             'dataAbsensi' => $dataAbsensi,
-            'statusAbsensi' => $statusAbsensi,
+            'statusAbsensi' => $this->statusAbsensi,
             'rekapStatus' => $rekapStatus,
-
-            // Tetap tersedia untuk kompatibilitas,
-            // tetapi tidak ditampilkan pada DOC.
             'poinApel' => '',
-
+            'deskripsiKegiatan' => $deskripsiKegiatan,
             'logoBidTik' => '',
             'logoPolda' => '',
             'reportType' => $type,
         ];
 
-        // ====================================================
-        // GENERATE WORD
-        // ====================================================
-
-        if ($type === 'doc') {
-
+        if ($type === 'doc' || $type === 'docx') {
             return $this->generateWordDocument(
-                $tanggal,
                 $tanggalFormat,
+                $periode,
                 $dataAbsensi,
-                $statusAbsensi,
+                $this->statusAbsensi,
                 $rekapStatus,
                 $logoBidTikPath,
                 $logoPoldaPath,
-                $data['poinApel']
+                $deskripsiKegiatan
             );
         }
 
-        // ====================================================
-        // GENERATE PDF
-        // ====================================================
-
         if ($type === 'pdf') {
+            if ($logoPoldaPath && is_file($logoPoldaPath)) {
+                $logo = file_get_contents($logoPoldaPath);
 
-            $logoPolda = '';
-
-            if (
-                !empty($logoPoldaPath) &&
-                is_file($logoPoldaPath)
-            ) {
-
-                $logoPoldaData =
-                    file_get_contents(
-                        $logoPoldaPath
-                    );
-
-                if ($logoPoldaData !== false) {
-                    $logoPolda =
-                        base64_encode(
-                            $logoPoldaData
-                        );
+                if ($logo !== false) {
+                    $data['logoPolda'] = base64_encode($logo);
                 }
             }
 
-            $logoBidTik = '';
+            if ($logoBidTikPath && is_file($logoBidTikPath)) {
+                $logo = file_get_contents($logoBidTikPath);
 
-            if (
-                !empty($logoBidTikPath) &&
-                is_file($logoBidTikPath)
-            ) {
-
-                $logoBidTikData =
-                    file_get_contents(
-                        $logoBidTikPath
-                    );
-
-                if ($logoBidTikData !== false) {
-                    $logoBidTik =
-                        base64_encode(
-                            $logoBidTikData
-                        );
+                if ($logo !== false) {
+                    $data['logoBidTik'] = base64_encode($logo);
                 }
             }
-
-            $data['logoPolda'] = $logoPolda;
-            $data['logoBidTik'] = $logoBidTik;
 
             return view(
                 'admin/generate-laporan/laporan-personel',
@@ -339,703 +658,573 @@ class GenerateLaporan extends BaseController
             );
         }
 
-        // ====================================================
-        // TYPE TIDAK DIKENALI
-        // ====================================================
+        return redirect()
+            ->to('/admin/laporan')
+            ->with('msg', 'Format laporan tidak dikenali.');
+    }
+
+    
+
+private function generateWordDocument(
+    string $tanggalFormat,
+    string $periode,
+    array $dataAbsensi,
+    array $statusAbsensi,
+    array $rekapStatus,
+    ?string $logoBidTikPath,
+    ?string $logoPoldaPath,
+    string $deskripsiKegiatan = ''
+) {
+    $phpWord = new PhpWord();
+    $phpWord->setDefaultFontName('Times New Roman');
+    $phpWord->setDefaultFontSize(9);
+
+    // ==================================================
+    // PENGATURAN HALAMAN
+    // ==================================================
+    $section = $phpWord->addSection([
+        'pageSizeW'    => 11906,
+        'pageSizeH'    => 16838,
+        'marginTop'    => 850,
+        'marginBottom' => 680,
+        'marginLeft'   => 453,
+        'marginRight'  => 453,
+    ]);
+
+    $merah = 'B5121B';
+    $hitam = '171717';
+    $abu   = '555555';
+    $putih = 'FFFFFF';
+
+    $normal = [
+        'name' => 'Times New Roman',
+        'size' => 10,
+        'color' => $hitam,
+    ];
+
+    $tebal = [
+        'name' => 'Times New Roman',
+        'size' => 9,
+        'bold' => true,
+        'color' => $hitam,
+    ];
+
+    $paragrafTengah = [
+        'alignment' => Jc::CENTER,
+        'spaceBefore' => 0,
+        'spaceAfter' => 0,
+    ];
+
+    $paragrafKiri = [
+        'alignment' => Jc::LEFT,
+        'spaceBefore' => 0,
+        'spaceAfter' => 0,
+    ];
+
+    $headerTabel = [
+        'name' => 'Times New Roman',
+        'size' => 10,
+        'bold' => true,
+        'color' => $putih,
+    ];
+
+    $isiTabel = [
+        'name' => 'Times New Roman',
+        'size' => 10,
+        'color' => $hitam,
+    ];
+
+    
+    // ==================================================
+    // KOP LAPORAN: LOGO KIRI, JUDUL TENGAH, LOGO KANAN
+    // Tabel tanpa border khusus untuk tata letak kop
+    // ==================================================
+
+    $kop = $section->addTable([
+        'borderSize' => 0,
+        'borderColor' => 'FFFFFF',
+        'cellMargin' => 0,
+        'layout' => 'fixed',
+        'width' => 11000,
+    ]);
+
+    $kop->addRow(1300, [
+        'exactHeight' => true,
+    ]);
+
+    // Kolom logo kiri
+    $cellLogoKiri = $kop->addCell(1300, [
+        'valign' => VerticalJc::CENTER,
+    ]);
+
+    if (!empty($logoBidTikPath) && is_file($logoBidTikPath)) {
+        $cellLogoKiri->addImage($logoBidTikPath, [
+            'width' => 55,
+            'height' => 55,
+            'alignment' => Jc::CENTER,
+        ]);
+    }
+
+    // Kolom judul tengah
+    $cellJudul = $kop->addCell(8400, [
+        'valign' => VerticalJc::CENTER,
+    ]);
+
+    $cellJudul->addText(
+        'LAPORAN KEHADIRAN PERSONEL',
+        [
+            'name' => 'Times New Roman',
+            'size' => 15,
+            'bold' => true,
+            'color' => $merah,
+        ],
+        [
+            'alignment' => Jc::CENTER,
+            'spaceBefore' => 0,
+            'spaceAfter' => 3,
+        ]
+    );
+
+    $cellJudul->addText(
+        'BIDANG TEKNOLOGI INFORMASI DAN KOMUNIKASI',
+        [
+            'name' => 'Times New Roman',
+            'size' => 9,
+            'bold' => true,
+            'color' => $hitam,
+        ],
+        [
+            'alignment' => Jc::CENTER,
+            'spaceBefore' => 0,
+            'spaceAfter' => 2,
+        ]
+    );
+
+    $cellJudul->addText(
+        'POLDA JAWA TIMUR',
+        $tebal,
+        [
+            'alignment' => Jc::CENTER,
+            'spaceBefore' => 0,
+            'spaceAfter' => 0,
+        ]
+    );
+
+    // Kolom logo kanan
+    $cellLogoKanan = $kop->addCell(1300, [
+        'valign' => VerticalJc::CENTER,
+    ]);
+
+    if (!empty($logoPoldaPath) && is_file($logoPoldaPath)) {
+        $cellLogoKanan->addImage($logoPoldaPath, [
+            'width' => 55,
+            'height' => 55,
+            'alignment' => Jc::CENTER,
+        ]);
+    }
+
+    // Garis pemisah kop
+    $section->addText(
+        str_repeat('_', 105),
+        [
+            'name' => 'Times New Roman',
+            'size' => 7,
+            'bold' => true,
+            'color' => $merah,
+        ],
+        [
+            'alignment' => Jc::CENTER,
+            'spaceBefore' => 2,
+            'spaceAfter' => 10,
+        ]
+    );
+
+    // ==================================================
+    // INFORMASI PERIODE TANPA TABEL
+    // ==================================================
+
+    $periode = strtolower(trim($periode));
+    $isMingguan = $periode === 'mingguan';
+    $isBulanan = $periode === 'bulanan';
+
+    $tanggalLabel = $isMingguan ? 'PERIODE' : 'HARI/TANGGAL';
+
+    if ($isMingguan) {
+        $judulPeriode = 'REKAPITULASI MINGGUAN KEHADIRAN PERSONEL';
+    } elseif ($isBulanan) {
+        $judulPeriode = 'REKAPITULASI BULANAN KEHADIRAN PERSONEL';
+    } else {
+        $judulPeriode = 'REKAPITULASI HARIAN KEHADIRAN PERSONEL';
+    }
+
+   
+    
+    // ==================================================
+// INFORMASI LAPORAN
+// Tanpa tabel
+// ==================================================
+
+$section->addText(
+    'HARI/TANGGAL : ' . $tanggalFormat,
+    $normal,
+    [
+        'alignment' => Jc::LEFT,
+        'indentation' => ['left' => 100],
+        'spaceBefore' => 0,
+        'spaceAfter' => 4,
+    ]
+);
+
+$section->addText(
+    'JENIS LAPORAN : ' . $judulPeriode,
+    $normal,
+    [
+        'alignment' => Jc::LEFT,
+        'indentation' => ['left' => 100],
+        'spaceBefore' => 0,
+        'spaceAfter' => 300, // Jarak sebelum judul A
+    ]
+);
+    // ==================================================
+    // JUDUL BAGIAN TANPA TABEL
+    // ==================================================
+
+    $buatJudulBagian = function (string $teks) use (
+        $section,
+        $merah,
+        $hitam
+    ) {
+        $section->addText(
+            $teks,
+            [
+                'name' => 'Times New Roman',
+                'size' => 9,
+                'bold' => true,
+                'color' => $merah,
+            ],
+            [
+                'alignment' => Jc::LEFT,
+                'spaceBefore' => 8,
+                'spaceAfter' => 4,
+            ]
+        );
+    };
+
+    // ==================================================
+    // 1. DATA KEHADIRAN PERSONEL
+    // Tabel pertama
+    // ==================================================
+
+    $buatJudulBagian('A. DATA KEHADIRAN PERSONEL');
+
+    $tabel = $section->addTable([
+        'borderSize' => 6,
+        'borderColor' => $abu,
+        'cellMargin' => 45,
+        'layout' => 'fixed',
+        'width' => 11000,
+    ]);
+
+    // Total lebar kolom = 11000 twips
+    $kolom = [
+        ['NO', 440],
+        ['NAMA', 2090],
+        ['PANGKAT', 1320],
+        ['NRP/NIP', 1320],
+        ['SUBBID', 1210],
+        ['UR', 1100],
+        ['STATUS', 1210],
+        ['KETERANGAN', 1210],
+        ['WAKTU', 1100],
+    ];
+
+    // Header tabel
+    $tabel->addRow();
+
+    foreach ($kolom as [$namaKolom, $lebar]) {
+        $tabel->addCell($lebar, [
+            'bgColor' => $merah,
+            'valign' => VerticalJc::CENTER,
+        ])->addText(
+            $namaKolom,
+            $headerTabel,
+            $paragrafTengah
+        );
+    }
+
+    // Isi tabel kehadiran
+    foreach ($dataAbsensi as $i => $row) {
+        $tabel->addRow();
+
+        $waktuRaw = trim((string) ($row['waktu_masuk'] ?? ''));
+        $waktuTampil = '-';
+
+        if ($waktuRaw !== '') {
+            if ($isMingguan || $isBulanan) {
+                $waktuTampil = $waktuRaw;
+            } else {
+                $timestamp = strtotime($waktuRaw);
+
+                $waktuTampil = $timestamp !== false
+                    ? date('H:i', $timestamp)
+                    : $waktuRaw;
+            }
+        }
+
+        $statusTampil = trim((string) ($row['status'] ?? ''));
+
+        if ($statusTampil === '') {
+            $statusTampil = 'BELUM ABSEN';
+        }
+
+        $keterangan = trim((string) ($row['keterangan'] ?? ''));
+
+        if ($keterangan === '') {
+            $keterangan = '-';
+        }
+
+        $nilaiKolom = [
+            (string) ($i + 1),
+            (string) ($row['nama'] ?? '-'),
+            (string) ($row['pangkat'] ?? '-'),
+            (string) ($row['nrp_nip'] ?? '-'),
+            (string) ($row['subbid'] ?? '-'),
+            (string) ($row['ur'] ?? '-'),
+            $statusTampil,
+            $keterangan,
+            $waktuTampil,
+        ];
+
+        foreach ($kolom as $index => [$namaKolom, $lebar]) {
+            $tabel->addCell($lebar, [
+                'valign' => VerticalJc::CENTER,
+            ])->addText(
+                $nilaiKolom[$index],
+                $isiTabel,
+                in_array($index, [0, 6, 8], true)
+                    ? $paragrafTengah
+                    : $paragrafKiri
+            );
+        }
+    }
+
+    if (empty($dataAbsensi)) {
+        $tabel->addRow();
+
+        $tabel->addCell(11000, [
+            'gridSpan' => 9,
+            'valign' => VerticalJc::CENTER,
+        ])->addText(
+            'Tidak terdapat data kehadiran.',
+            $isiTabel,
+            $paragrafTengah
+        );
+    }
+
+    
+    
+    // ==================================================
+    // 2. REKAPITULASI KEHADIRAN
+    // Tabel kedua
+    // ==================================================
+
+    // Memberi jarak setelah tabel DATA KEHADIRAN PERSONEL
+    $section->addText(
+        '',
+        [],
+        [
+            'spaceBefore' => 0,
+            'spaceAfter' => 12,
+        ]
+    );
+
+    // Judul rekapitulasi
+    $buatJudulBagian('B. REKAPITULASI KEHADIRAN');
+
+    $rekap = $section->addTable([
+        'borderSize' => 6,
+        'borderColor' => $abu,
+        'cellMargin' => 35,
+        'layout' => 'fixed',
+        'width' => 11000,
+    ]);
+
+
+    $jumlahKolom = count($statusAbsensi) + 1;
+    $jumlahKolom = max(1, $jumlahKolom);
+    $lebarKolomRekap = (int) floor(11000 / $jumlahKolom);
+
+    // Header rekapitulasi
+    $rekap->addRow();
+
+    foreach ($statusAbsensi as $status) {
+        $rekap->addCell($lebarKolomRekap, [
+            'bgColor' => $hitam,
+            'valign' => VerticalJc::CENTER,
+        ])->addText(
+            (string) $status,
+            [
+                'name' => 'Times New Roman',
+                'size' => 6,
+                'bold' => true,
+                'color' => $putih,
+            ],
+            $paragrafTengah
+        );
+    }
+
+    $rekap->addCell($lebarKolomRekap, [
+        'bgColor' => $merah,
+        'valign' => VerticalJc::CENTER,
+    ])->addText(
+        $isMingguan ? 'TOTAL PRESENSI' : 'TOTAL',
+        [
+            'name' => 'Times New Roman',
+            'size' => 6,
+            'bold' => true,
+            'color' => $putih,
+        ],
+        $paragrafTengah
+    );
+
+    // Nilai rekapitulasi
+    $rekap->addRow();
+
+    $totalKehadiran = 0;
+
+    foreach ($statusAbsensi as $status) {
+        $jumlah = (int) ($rekapStatus[$status] ?? 0);
+        $totalKehadiran += $jumlah;
+
+        $rekap->addCell($lebarKolomRekap, [
+            'valign' => VerticalJc::CENTER,
+        ])->addText(
+            (string) $jumlah,
+            $tebal,
+            $paragrafTengah
+        );
+    }
+
+    $rekap->addCell($lebarKolomRekap, [
+        'bgColor' => 'F3F4F6',
+        'valign' => VerticalJc::CENTER,
+    ])->addText(
+        (string) $totalKehadiran,
+        $tebal,
+        $paragrafTengah
+    );
+
+    // ==================================================
+    // JARAK SEBELUM DESKRIPSI KEGIATAN
+    // ==================================================
+
+    $section->addText(
+        '',
+        [],
+        [
+            'spaceBefore' => 0,
+            'spaceAfter' => 12,
+        ]
+    );
+
+    // ==================================================
+    // 3. DESKRIPSI KEGIATAN
+    // ==================================================
+
+    $buatJudulBagian('C. DESKRIPSI KEGIATAN');
+
+
+    $kegiatan = $section->addTable([
+        'borderSize' => 6,
+        'borderColor' => $abu,
+        'cellMargin' => 100,
+        'layout' => 'fixed',
+        'width' => 11000,
+    ]);
+
+    $kegiatan->addRow();
+
+    $kegiatan->addCell(11000, [
+        'valign' => VerticalJc::TOP,
+    ])->addText(
+        trim($deskripsiKegiatan) !== ''
+            ? trim($deskripsiKegiatan)
+            : '-',
+        $normal,
+        [
+            'alignment' => Jc::BOTH,
+            'spaceBefore' => 0,
+            'spaceAfter' => 0,
+        ]
+    );
+
+    
+    // ==================================================
+// TANDA TANGAN
+// ==================================================
+
+$section->addTextBreak(2);
+
+$section->addText('Mengetahui,', $normal, [
+    'alignment' => Jc::RIGHT,
+    'indentation' => ['right' => 500],
+    'spaceBefore' => 0,
+    'spaceAfter' => 0,
+]);
+
+$section->addText('________________________', $tebal, [
+    'alignment' => Jc::RIGHT,
+    'indentation' => ['right' => 500],
+    'spaceBefore' => 500, // Jarak antara "Mengetahui," dan garis
+    'spaceAfter' => 0,
+]);
+    // ==================================================
+    // SIMPAN DAN UNDUH WORD
+    // ==================================================
+
+    $uploadPath = WRITEPATH . 'uploads/';
+
+    if (
+        !is_dir($uploadPath)
+        && !mkdir($uploadPath, 0775, true)
+        && !is_dir($uploadPath)
+    ) {
+        log_message(
+            'error',
+            'Gagal membuat folder penyimpanan Word: ' . $uploadPath
+        );
+
+        return redirect()
+            ->to('/admin/laporan')
+            ->with('msg', 'Folder penyimpanan laporan tidak dapat dibuat.');
+    }
+
+    $filename = 'laporan_kehadiran_' . date('Y-m-d_H-i-s') . '.docx';
+    $filePath = $uploadPath . $filename;
+
+    try {
+        $writer = IOFactory::createWriter($phpWord, 'Word2007');
+        $writer->save($filePath);
+    } catch (\Throwable $e) {
+        log_message(
+            'error',
+            'Gagal membuat Word: ' . $e->getMessage()
+            . ' | File: ' . $e->getFile()
+            . ' | Baris: ' . $e->getLine()
+        );
 
         return redirect()
             ->to('/admin/laporan')
             ->with(
                 'msg',
-                'Format laporan tidak dikenali.'
+                'Gagal membuat dokumen Word. Periksa log aplikasi.'
             );
     }
 
-    // ========================================================
-    // GENERATE WORD DOCUMENT
-    // ========================================================
-
-    private function generateWordDocument(
-        string $tanggal,
-        string $tanggalFormat,
-        array $dataAbsensi,
-        array $statusAbsensi,
-        array $rekapStatus,
-        ?string $logoBidTikPath,
-        ?string $logoPoldaPath,
-        string $poinApel = ''
-    ) {
-        // ====================================================
-        // TOTAL KEHADIRAN
-        // ====================================================
-
-        $totalKehadiran = 0;
-
-        foreach ($statusAbsensi as $status) {
-
-            $totalKehadiran += (int) (
-                $rekapStatus[$status] ?? 0
-            );
-        }
-
-        // ====================================================
-        // PHPWORD
-        // ====================================================
-
-        $phpWord = new PhpWord();
-
-        $phpWord->setDefaultFontName('Arial');
-        $phpWord->setDefaultFontSize(9);
-
-        $section = $phpWord->addSection([
-            'pageSizeW' => 11906,
-            'pageSizeH' => 16838,
-            'marginTop' => 900,
-            'marginBottom' => 900,
-            'marginLeft' => 1134,
-            'marginRight' => 1134,
-        ]);
-
-        // ====================================================
-        // FONT
-        // ====================================================
-
-        $fontNormal = [
-            'name' => 'Arial',
-            'size' => 9,
-        ];
-
-        $fontBold = [
-            'name' => 'Arial',
-            'size' => 9,
-            'bold' => true,
-        ];
-
-        $fontTitle = [
-            'name' => 'Arial',
-            'size' => 14,
-            'bold' => true,
-        ];
-
-        $fontSubtitle = [
-            'name' => 'Arial',
-            'size' => 9,
-            'bold' => true,
-        ];
-
-        $fontTableHeader = [
-            'name' => 'Arial',
-            'size' => 7,
-            'bold' => true,
-            'color' => 'FFFFFF',
-        ];
-
-        $fontTable = [
-            'name' => 'Arial',
-            'size' => 7,
-        ];
-
-        $fontTableBold = [
-            'name' => 'Arial',
-            'size' => 7,
-            'bold' => true,
-        ];
-
-        // ====================================================
-        // HEADER
-        // ====================================================
-
-        $headerParagraph = $section->addTextRun([
-            'alignment' => Jc::CENTER,
-            'spaceAfter' => 40,
-        ]);
-
-        if (
-            !empty($logoBidTikPath) &&
-            is_file($logoBidTikPath)
-        ) {
-
-            $headerParagraph->addImage(
-                $logoBidTikPath,
-                [
-                    'width' => 45,
-                    'height' => 45,
-                    'wrappingStyle' => 'inline',
-                ]
-            );
-        }
-
-        $headerParagraph->addText(
-            '    ',
-            $fontNormal
-        );
-
-        $headerParagraph->addText(
-            'LAPORAN KEHADIRAN PERSONEL',
-            $fontTitle
-        );
-
-        $headerParagraph->addText(
-            '    ',
-            $fontNormal
-        );
-
-        if (
-            !empty($logoPoldaPath) &&
-            is_file($logoPoldaPath)
-        ) {
-
-            $headerParagraph->addImage(
-                $logoPoldaPath,
-                [
-                    'width' => 45,
-                    'height' => 45,
-                    'wrappingStyle' => 'inline',
-                ]
-            );
-        }
-
-        $section->addText(
-            'BIDANG TEKNOLOGI INFORMASI DAN KOMUNIKASI',
-            $fontSubtitle,
-            [
-                'alignment' => Jc::CENTER,
-                'spaceAfter' => 0,
-            ]
-        );
-
-        $section->addText(
-            'POLDA JAWA TIMUR',
-            $fontNormal,
-            [
-                'alignment' => Jc::CENTER,
-                'spaceAfter' => 80,
-            ]
-        );
-
-        $section->addText(
-            '________________________________________________________________________________',
-            [
-                'name' => 'Arial',
-                'size' => 7,
-                'bold' => true,
-                'color' => 'B5121B',
-            ],
-            [
-                'alignment' => Jc::CENTER,
-                'spaceAfter' => 100,
-            ]
-        );
-
-        // ====================================================
-        // INFORMASI LAPORAN
-        // ====================================================
-
-        $section->addText(
-            'Tanggal : ' . $tanggalFormat,
-            $fontNormal,
-            [
-                'spaceAfter' => 30,
-            ]
-        );
-
-        $section->addText(
-            'Jenis Laporan : Rekapitulasi Kehadiran Personel',
-            $fontNormal,
-            [
-                'spaceAfter' => 120,
-            ]
-        );
-
-        // ====================================================
-        // TABEL 1
-        // DATA KEHADIRAN PERSONEL
-        // ====================================================
-
-        $section->addText(
-            'DATA KEHADIRAN PERSONEL',
-            $fontBold,
-            [
-                'spaceAfter' => 50,
-            ]
-        );
-
-        $dataTable = $section->addTable([
-            'borderSize' => 6,
-            'borderColor' => '555555',
-            'cellMargin' => 45,
-            'layout' => 'fixed',
-        ]);
-
-        $dataTable->addRow(500);
-
-        $headerColumns = [
-            ['No.', 450],
-            ['NRP/NIP', 1200],
-            ['Nama', 2000],
-            ['Pangkat', 1100],
-            ['Unit Kerja', 1800],
-            ['Status', 1450],
-            ['Waktu', 1638],
-        ];
-
-        foreach ($headerColumns as $column) {
-
-            $dataTable
-                ->addCell(
-                    $column[1],
-                    [
-                        'bgColor' => 'B5121B',
-                        'valign' => VerticalJc::CENTER,
-                    ]
-                )
-                ->addText(
-                    $column[0],
-                    $fontTableHeader,
-                    [
-                        'alignment' => Jc::CENTER,
-                    ]
-                );
-        }
-
-        // ====================================================
-        // ISI DATA PERSONEL
-        // ====================================================
-
-        if (!empty($dataAbsensi)) {
-
-            $no = 1;
-
-            foreach ($dataAbsensi as $row) {
-
-                $dataTable->addRow();
-
-                // No.
-                $dataTable
-                    ->addCell(
-                        450,
-                        [
-                            'valign' => VerticalJc::CENTER,
-                        ]
-                    )
-                    ->addText(
-                        (string) $no++,
-                        $fontTable,
-                        [
-                            'alignment' => Jc::CENTER,
-                        ]
-                    );
-
-                // NRP/NIP
-                $dataTable
-                    ->addCell(
-                        1200,
-                        [
-                            'valign' => VerticalJc::CENTER,
-                        ]
-                    )
-                    ->addText(
-                        (string) (
-                            $row['nrp_nip'] ?? '-'
-                        ),
-                        $fontTable
-                    );
-
-                // Nama
-                $dataTable
-                    ->addCell(
-                        2000,
-                        [
-                            'valign' => VerticalJc::CENTER,
-                        ]
-                    )
-                    ->addText(
-                        (string) (
-                            $row['nama'] ?? '-'
-                        ),
-                        $fontTable
-                    );
-
-                // Pangkat
-                $dataTable
-                    ->addCell(
-                        1100,
-                        [
-                            'valign' => VerticalJc::CENTER,
-                        ]
-                    )
-                    ->addText(
-                        (string) (
-                            $row['pangkat'] ?? '-'
-                        ),
-                        $fontTable
-                    );
-
-                // Unit Kerja
-                $dataTable
-                    ->addCell(
-                        1800,
-                        [
-                            'valign' => VerticalJc::CENTER,
-                        ]
-                    )
-                    ->addText(
-                        (string) (
-                            $row['satker'] ?? '-'
-                        ),
-                        $fontTable
-                    );
-
-                // Status
-                $status = !empty($row['status'])
-                    ? strtoupper(
-                        trim($row['status'])
-                    )
-                    : 'BELUM ABSEN';
-
-                $dataTable
-                    ->addCell(
-                        1450,
-                        [
-                            'valign' => VerticalJc::CENTER,
-                        ]
-                    )
-                    ->addText(
-                        $status,
-                        $fontTable,
-                        [
-                            'alignment' => Jc::CENTER,
-                        ]
-                    );
-
-                // Waktu
-                $waktu = '-';
-
-                if (!empty($row['waktu_masuk'])) {
-
-                    try {
-
-                        $waktu = date(
-                            'H:i',
-                            strtotime(
-                                $row['waktu_masuk']
-                            )
-                        );
-
-                    } catch (\Throwable $e) {
-
-                        $waktu = '-';
-                    }
-                }
-
-                $dataTable
-                    ->addCell(
-                        1638,
-                        [
-                            'valign' => VerticalJc::CENTER,
-                        ]
-                    )
-                    ->addText(
-                        $waktu,
-                        $fontTable,
-                        [
-                            'alignment' => Jc::CENTER,
-                        ]
-                    );
-            }
-
-        } else {
-
-            $dataTable->addRow();
-
-            $dataTable
-                ->addCell(
-                    9638,
-                    [
-                        'valign' => VerticalJc::CENTER,
-                    ]
-                )
-                ->addText(
-                    'Tidak terdapat data kehadiran.',
-                    $fontTable,
-                    [
-                        'alignment' => Jc::CENTER,
-                    ]
-                );
-        }
-
-        $section->addText(
-            '',
-            $fontNormal,
-            [
-                'spaceAfter' => 30,
-            ]
-        );
-
-        // ====================================================
-        // TABEL 2
-        // REKAPITULASI KEHADIRAN
-        // ====================================================
-
-        $section->addText(
-            'REKAPITULASI KEHADIRAN',
-            $fontBold,
-            [
-                'spaceAfter' => 50,
-            ]
-        );
-
-        $rekapTable = $section->addTable([
-            'borderSize' => 6,
-            'borderColor' => '555555',
-            'cellMargin' => 40,
-            'layout' => 'fixed',
-        ]);
-
-        $jumlahKolomRekap =
-            count($statusAbsensi) + 1;
-
-        $lebarRekap = (int) floor(
-            9638 / $jumlahKolomRekap
-        );
-
-        $rekapTable->addRow();
-
-        foreach ($statusAbsensi as $status) {
-
-            $rekapTable
-                ->addCell(
-                    $lebarRekap,
-                    [
-                        'bgColor' => '171717',
-                        'valign' => VerticalJc::CENTER,
-                    ]
-                )
-                ->addText(
-                    $status,
-                    [
-                        'name' => 'Arial',
-                        'size' => 6,
-                        'bold' => true,
-                        'color' => 'FFFFFF',
-                    ],
-                    [
-                        'alignment' => Jc::CENTER,
-                    ]
-                );
-        }
-
-        $rekapTable
-            ->addCell(
-                $lebarRekap,
-                [
-                    'bgColor' => 'EEEEEE',
-                    'valign' => VerticalJc::CENTER,
-                ]
-            )
-            ->addText(
-                'TOTAL',
-                $fontTableBold,
-                [
-                    'alignment' => Jc::CENTER,
-                ]
-            );
-
-        $rekapTable->addRow();
-
-        foreach ($statusAbsensi as $status) {
-
-            $rekapTable
-                ->addCell(
-                    $lebarRekap,
-                    [
-                        'valign' => VerticalJc::CENTER,
-                    ]
-                )
-                ->addText(
-                    (string) (
-                        $rekapStatus[$status] ?? 0
-                    ),
-                    $fontTableBold,
-                    [
-                        'alignment' => Jc::CENTER,
-                    ]
-                );
-        }
-
-        $rekapTable
-            ->addCell(
-                $lebarRekap,
-                [
-                    'bgColor' => 'EEEEEE',
-                    'valign' => VerticalJc::CENTER,
-                ]
-            )
-            ->addText(
-                (string) $totalKehadiran,
-                $fontTableBold,
-                [
-                    'alignment' => Jc::CENTER,
-                ]
-            );
-
-        $section->addText(
-            '',
-            $fontNormal,
-            [
-                'spaceAfter' => 30,
-            ]
-        );
-
-        // ====================================================
-        // TABEL 3
-        // DESKRIPSI KEGIATAN
-        // TANPA KOLOM NO.
-        // ====================================================
-
-        $section->addText(
-            'DESKRIPSI KEGIATAN',
-            $fontBold,
-            [
-                'spaceAfter' => 50,
-            ]
-        );
-
-        $kegiatanTable = $section->addTable([
-            'borderSize' => 6,
-            'borderColor' => '555555',
-            'cellMargin' => 70,
-            'layout' => 'fixed',
-        ]);
-
-        // HEADER
-        $kegiatanTable->addRow();
-
-        $kegiatanTable
-            ->addCell(
-                9638,
-                [
-                    'bgColor' => 'B5121B',
-                    'valign' => VerticalJc::CENTER,
-                ]
-            )
-            ->addText(
-                'Deskripsi Kegiatan',
-                $fontTableHeader,
-                [
-                    'alignment' => Jc::CENTER,
-                ]
-            );
-
-        // ISI
-        $kegiatanTable->addRow();
-
-        $kegiatanTable
-            ->addCell(
-                9638,
-                [
-                    'valign' => VerticalJc::CENTER,
-                ]
-            )
-            ->addText(
-                '-',
-                $fontTable
-            );
-
-        // ====================================================
-        // MENGETAHUI
-        // ====================================================
-
-        $section->addText(
-            '',
-            $fontNormal
-        );
-
-        $section->addText(
-            'Mengetahui,',
-            [
-                'name' => 'Arial',
-                'size' => 9,
-                'bold' => true,
-            ],
-            [
-                'alignment' => Jc::RIGHT,
-                'spaceAfter' => 80,
-            ]
-        );
-
-        $section->addText(
-            '',
-            $fontNormal
-        );
-
-        $section->addText(
-            '____________________________',
-            [
-                'name' => 'Arial',
-                'size' => 9,
-                'bold' => true,
-            ],
-            [
-                'alignment' => Jc::RIGHT,
-            ]
-        );
-
-        // ====================================================
-        // SIMPAN FILE WORD
-        // ====================================================
-
-        $uploadPath =
-            WRITEPATH .
-            'uploads/';
-
-        if (!is_dir($uploadPath)) {
-
-            mkdir(
-                $uploadPath,
-                0775,
-                true
-            );
-        }
-
-        $filename =
-            'laporan_kehadiran_' .
-            $tanggal .
-            '.docx';
-
-        $filePath =
-            $uploadPath .
-            $filename;
-
-        try {
-
-            $writer = IOFactory::createWriter(
-                $phpWord,
-                'Word2007'
-            );
-
-            $writer->save($filePath);
-
-        } catch (\Throwable $e) {
-
-            return redirect()
-                ->to('/admin/laporan')
-                ->with(
-                    'msg',
-                    'Gagal membuat dokumen Word: ' .
-                    $e->getMessage()
-                );
-        }
-
-        return $this->response
-            ->download(
-                $filePath,
-                null
-            )
-            ->setFileName(
-                $filename
-            );
-    }
+    return $this->response
+        ->download($filePath, null)
+        ->setFileName($filename);
+}
 
     // ========================================================
     // KIRIM WHATSAPP
@@ -1043,179 +1232,58 @@ class GenerateLaporan extends BaseController
 
     public function kirimWhatsApp()
     {
-        $tanggal =
-            $this->request->getPost(
-                'tanggal'
-            );
+        $tanggal = trim(
+            (string) ($this->request->getPost('tanggal') ?? '')
+        );
 
-        // ====================================================
-        // VALIDASI TANGGAL
-        // ====================================================
-
-        if (empty($tanggal)) {
-
+        if (!$this->tanggalValid($tanggal)) {
             return redirect()
                 ->to('/admin/laporan')
-                ->with(
-                    'msg',
-                    'Tanggal laporan belum dipilih.'
-                );
+                ->with('msg', 'Tanggal laporan tidak valid.');
         }
 
-        // ====================================================
-        // NOMOR WHATSAPP
-        // ====================================================
-
-        $nomorTujuan =
-            env('WA_TARGET_NUMBER');
+        $nomorTujuan = env('WA_TARGET_NUMBER');
+        $token = env('FONNTE_TOKEN');
 
         if (empty($nomorTujuan)) {
-
             return redirect()
                 ->to('/admin/laporan')
-                ->with(
-                    'msg',
-                    'Nomor WhatsApp tujuan belum diatur.'
-                );
+                ->with('msg', 'Nomor WhatsApp tujuan belum diatur.');
         }
-
-        // ====================================================
-        // FONNTE TOKEN
-        // ====================================================
-
-        $token =
-            env('FONNTE_TOKEN');
 
         if (empty($token)) {
-
             return redirect()
                 ->to('/admin/laporan')
-                ->with(
-                    'msg',
-                    'Fonnte token belum diatur.'
-                );
+                ->with('msg', 'Token Fonnte belum diatur.');
         }
-
-        // ====================================================
-        // AMBIL DATA PRESENSI
-        // ====================================================
 
         $presensi = $this->presensiModel
-            ->where(
-                'waktu_masuk >=',
-                $tanggal . ' 00:00:00'
-            )
-            ->where(
-                'waktu_masuk <=',
-                $tanggal . ' 23:59:59'
-            )
+            ->where('waktu_masuk >=', $tanggal . ' 00:00:00')
+            ->where('waktu_masuk <=', $tanggal . ' 23:59:59')
             ->findAll();
 
-        // ====================================================
-        // REKAP
-        // ====================================================
+        $rekap = $this->hitungRekapStatus($presensi);
+        $tanggalFormat = $this->formatTanggalIndonesia($tanggal);
 
-        $rekap = [
-            'HADIR' => 0,
-            'DINAS' => 0,
-            'LEPAS DINAS' => 0,
-            'CUTI' => 0,
-            'SAKIT' => 0,
-            'IZIN' => 0,
-            'TERLAMBAT' => 0,
-            'DIK' => 0,
-            'BKO' => 0,
-        ];
+        $pesan = "LAPORAN KEHADIRAN PERSONEL\n"
+            . "POLDA JAWA TIMUR BIDANG TIK\n\n"
+            . "Tanggal: " . $tanggalFormat . "\n\n"
+            . "REKAPITULASI KEHADIRAN\n";
 
-        foreach ($presensi as $absen) {
-
-            $status = strtoupper(
-                trim(
-                    $absen['status'] ?? ''
-                )
-            );
-
-            if (isset($rekap[$status])) {
-                $rekap[$status]++;
-            }
+        foreach ($this->statusAbsensi as $status) {
+            $pesan .= $status . ': ' . ($rekap[$status] ?? 0) . "\n";
         }
 
-        // ====================================================
-        // FORMAT TANGGAL
-        // ====================================================
-
-        try {
-
-            $tanggalFormat = Time::parse(
-                $tanggal,
-                locale: 'id'
-            )->toLocalizedString(
-                'dd MMMM yyyy'
-            );
-
-        } catch (\Throwable $e) {
-
-            $tanggalFormat = $tanggal;
-        }
-
-        // ====================================================
-        // PESAN WHATSAPP
-        // ====================================================
-
-        $pesan =
-            "LAPORAN KEHADIRAN PERSONEL\n" .
-            "POLDA JAWA TIMUR BIDANG TIK\n\n" .
-            "Tanggal: " .
-            $tanggalFormat .
-            "\n\n" .
-            "REKAPITULASI KEHADIRAN\n" .
-            "HADIR: " .
-            $rekap['HADIR'] .
-            "\n" .
-            "DINAS: " .
-            $rekap['DINAS'] .
-            "\n" .
-            "LEPAS DINAS: " .
-            $rekap['LEPAS DINAS'] .
-            "\n" .
-            "CUTI: " .
-            $rekap['CUTI'] .
-            "\n" .
-            "SAKIT: " .
-            $rekap['SAKIT'] .
-            "\n" .
-            "IZIN: " .
-            $rekap['IZIN'] .
-            "\n" .
-            "TERLAMBAT: " .
-            $rekap['TERLAMBAT'] .
-            "\n" .
-            "DIK: " .
-            $rekap['DIK'] .
-            "\n" .
-            "BKO: " .
-            $rekap['BKO'] .
-            "\n\n" .
-            "Laporan dibuat melalui Sistem " .
-            "Rekapitulasi dan Pelaporan Data " .
-            "Kehadiran Personel Bidang TIK " .
-            "Polda Jawa Timur.";
-
-        // ====================================================
-        // CURL CLIENT
-        // ====================================================
+        $pesan .= "\nTOTAL PRESENSI: " . array_sum($rekap) . "\n\n"
+            . "Laporan dibuat melalui Sistem Rekapitulasi dan Pelaporan Data "
+            . "Kehadiran Personel Bidang TIK Polda Jawa Timur.";
 
         $client = \Config\Services::curlrequest([
             'timeout' => 30,
             'http_errors' => false,
         ]);
 
-        // ====================================================
-        // KIRIM KE FONNTE
-        // ====================================================
-
         try {
-
             $response = $client->post(
                 'https://api.fonnte.com/send',
                 [
@@ -1229,58 +1297,36 @@ class GenerateLaporan extends BaseController
                 ]
             );
 
-            $statusCode =
-                $response->getStatusCode();
-
-            $hasil = json_decode(
-                $response->getBody(),
-                true
+            $statusCode = $response->getStatusCode();
+            $hasil = json_decode($response->getBody(), true);
+        } catch (\Throwable $e) {
+            log_message(
+                'error',
+                'Gagal mengirim WhatsApp: ' . $e->getMessage()
             );
 
-        } catch (\Throwable $e) {
-
             return redirect()
                 ->to('/admin/laporan')
-                ->with(
-                    'msg',
-                    'Gagal menghubungi layanan WhatsApp: ' .
-                    $e->getMessage()
-                );
+                ->with('msg', 'Gagal menghubungi layanan WhatsApp.');
         }
-
-        // ====================================================
-        // BERHASIL
-        // ====================================================
 
         if (
-            $statusCode >= 200 &&
-            $statusCode < 300 &&
-            isset($hasil['status']) &&
-            $hasil['status'] === true
+            $statusCode >= 200
+            && $statusCode < 300
+            && isset($hasil['status'])
+            && $hasil['status'] === true
         ) {
-
             return redirect()
                 ->to('/admin/laporan')
-                ->with(
-                    'msg',
-                    'Laporan berhasil dikirim ke WhatsApp.'
-                );
+                ->with('msg', 'Laporan berhasil dikirim ke WhatsApp.');
         }
 
-        // ====================================================
-        // GAGAL
-        // ====================================================
-
-        $pesanError =
-            $hasil['reason'] ??
-            $hasil['message'] ??
-            'Laporan gagal dikirim ke WhatsApp.';
+        $pesanError = $hasil['reason']
+            ?? $hasil['message']
+            ?? 'Laporan gagal dikirim ke WhatsApp.';
 
         return redirect()
             ->to('/admin/laporan')
-            ->with(
-                'msg',
-                $pesanError
-            );
+            ->with('msg', $pesanError);
     }
 }

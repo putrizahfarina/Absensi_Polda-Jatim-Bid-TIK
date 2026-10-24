@@ -464,19 +464,21 @@
         border-bottom: 1px solid #f1f5f9;
     }
 
-    /* Badge Styling */
-    .no-badge {
-        width: 26px;
-        height: 26px;
-        background: #1e293b;
-        color: #ffffff;
-        font-weight: 700;
-        font-size: 0.75rem;
-        border-radius: 6px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
+    
+   /* Nomor Urut Mengikuti Warna Zebra Baris */
+.no-badge {
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    font-weight: 700;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
 
     .avatar-initial {
         width: 30px;
@@ -658,10 +660,66 @@
         <div class="text-muted mb-4" id="textStats" style="font-size:.85rem"></div>
         <div id="exceptionChipsContainer"></div>
     </div>
+        <div id="exceptionChipsContainer"></div>
+    </div>
 
+    <!-- TAMBAHAN: DESKRIPSI KEGIATAN -->
+   <!-- Deskripsi Kegiatan -->
+<div class="card-custom p-3 mb-4">
+    <h5 class="fw-bold mb-2" style="color: #b5121b;">
+        <i class="fas fa-clipboard-list me-2"></i>
+        Deskripsi Kegiatan
+    </h5>
+
+    <textarea
+        id="deskripsiKegiatan"
+        name="deskripsi"
+        class="form-control"
+        rows="4"
+        maxlength="5000"
+        placeholder="Tuliskan deskripsi kegiatan hari ini..."
+    ><?= esc($deskripsiKegiatan ?? '') ?></textarea>
+</div>
+    <!-- AKHIR TAMBAHAN DAFTAR KEGIATAN -->
+
+    
     <!-- Ringkasan Statistik -->
-    <span class="section-label"><i class="fas fa-chart-pie me-1"></i> RINGKASAN HARI INI</span>
-    <div id="summaryContainer" class="mb-4"></div>
+<!-- Header Ringkasan Hari Ini -->
+<div class="card-custom p-3 mb-3"
+     style="background: #850c13 !important;
+            border: 1px solid #b5121b;
+            border-radius: 12px;">
+
+    <div class="d-flex align-items-center gap-3">
+        <div style="width: 42px;
+                    height: 42px;
+                    background: rgba(255,255,255,0.15);
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;">
+            <i class="fas fa-chart-pie"
+               style="color: #ffffff; font-size: 20px;"></i>
+        </div>
+
+        <div>
+            <h5 class="fw-bold mb-1"
+                style="color: #ffffff !important;
+                       font-size: 16px;">
+                RINGKASAN HARI INI
+            </h5>
+
+            <p class="mb-0"
+               style="color: #fce7e7 !important; font-size: 12px;">
+                Rekap jumlah personel berdasarkan status absensi
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Card Statistik per Status -->
+<div id="summaryContainer" class="row g-3 mb-4"></div>
 
     <!-- Tabel Absensi Card -->
     <div class="card-custom p-4">
@@ -887,7 +945,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     'X-Requested-With': 'XMLHttpRequest',
                     '<?= csrf_header() ?>': '<?= csrf_hash() ?>'
                 },
-                body: JSON.stringify({ exceptions: dataToSave })
+                body: JSON.stringify({
+    exceptions: dataToSave,
+    deskripsi: document.getElementById('deskripsiKegiatan').value.trim()
+})
             });
 
             if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -1172,23 +1233,21 @@ function renderTable() {
 
         const tr = document.createElement('tr');
 
-        tr.innerHTML = `
-            <td><span class="${number % 2 ? 'num-zebra-odd' : 'num-zebra-even'}">${number}</span></td>
-            <td>
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div class="avatar-circle" style="width:34px;height:34px;font-size:13px">
-                        ${escapeHtml(nama ? nama.charAt(0).toUpperCase() : '?')}
-                    </div>
-                    <span class="fw-bold text-dark">${escapeHtml(nama)}</span>
-                </div>
-            </td>
-            <td class="text-muted small">${escapeHtml(p.pangkat || '—')}</td>
-            <td class="fw-bold" style="color:#64748b">${escapeHtml(nrp || '—')}</td>
-            <td><span class="badge bg-light text-secondary border" style="border-radius: 6px; font-weight: 500;">${escapeHtml(p.subbid || '—')}</span></td>
-            <td><span class="badge bg-light text-secondary border" style="border-radius: 6px; font-weight: 500;">${escapeHtml(p.ur || '—')}</span></td>
-            <td><span class="badge-status ${badge}">● ${escapeHtml(status)}</span></td>
-            <td class="text-muted small">${escapeHtml(keterangan)}</td>
-        `;
+        
+tr.innerHTML = `
+    <td><span class="no-badge">${number}</span></td>
+
+    <td>
+        <span class="fw-bold text-dark">${escapeHtml(nama)}</span>
+    </td>
+
+    <td class="text-muted small">${escapeHtml(p.pangkat || '—')}</td>
+    <td class="fw-bold" style="color:#64748b">${escapeHtml(nrp || '—')}</td>
+    <td><span class="badge bg-light text-secondary border" style="border-radius: 6px; font-weight: 500;">${escapeHtml(p.subbid || '—')}</span></td>
+    <td><span class="badge bg-light text-secondary border" style="border-radius: 6px; font-weight: 500;">${escapeHtml(p.ur || '—')}</span></td>
+    <td><span class="badge-status ${badge}">● ${escapeHtml(status)}</span></td>
+    <td class="text-muted small">${escapeHtml(keterangan)}</td>
+`;
 
         tbody.appendChild(tr);
         number++;
