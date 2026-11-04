@@ -17,7 +17,7 @@ class Fonnte implements Whatsapp
 
     public function getToken(): string
     {
-        return $this->token ?? env('WHATSAPP_TOKEN');
+        return $this->token ?? env('9r3uRCMRzruH1g6yRGwk');
     }
 
     /**

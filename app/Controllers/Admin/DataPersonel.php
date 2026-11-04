@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\PersonelModel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 
@@ -65,47 +66,143 @@ class DataPersonel extends BaseController
         return view('admin/data/import-personel', $data);
     }
 
-    public function import()
-    {
-        $file = $this->request->getFile('file_excel');
+   public function import()
+{
+    $file = $this->request->getFile('file_excel');
 
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $ext = $file->getClientExtension();
+    // Validasi file
+    if (!$file || !$file->isValid() || $file->hasMoved()) {
+        return redirect()->back()->with('error', 'File Excel tidak valid.');
+    }
 
-            if ($ext === 'csv') {
-                $handle = fopen($file->getTempName(), "r");
-                $row = 0;
+    $ext = strtolower($file->getClientExtension());
 
-                while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                    $row++;
-                    if ($row == 1) continue; // Skip header
+    if (!in_array($ext, ['xlsx', 'xls', 'csv'])) {
+        return redirect()->back()->with('error', 'Format file harus XLSX, XLS, atau CSV.');
+    }
 
-                    $nrp = trim($data[0] ?? '');
-                    if (empty($nrp)) continue;
+    try {
+        // Membaca file Excel atau CSV
+        $spreadsheet = IOFactory::load($file->getTempName());
+        $sheet = $spreadsheet->getActiveSheet();
 
-                    $qrPath = $this->generateQRCode($nrp);
+        $rows = $sheet->toArray('', true, true, false);
 
-                    $this->personelModel->save([
-                        'nrp_nip'       => $nrp,
-                        'nama'          => trim($data[1] ?? ''),
-                        'pangkat'       => trim($data[2] ?? ''),
-                        // Urutan index $data di bawah ini disesuaikan dengan format CSV kamu,
-                        // misal index 3 untuk subbid dan 4 untuk ur. Silakan diubah jika format CSV-mu berbeda.
-                        'subbid'        => trim($data[3] ?? ''), 
-                        'ur'            => trim($data[4] ?? ''),
-                        'jenis_kelamin' => trim($data[5] ?? 'L'),
-                        'qr_code'       => $qrPath,
-                    ]);
-                }
-                fclose($handle);
-                // DIPERBAIKI: URL redirect dikembalikan ke /admin/data-personel
-                return redirect()->to('/admin/data-personel')->with('success', 'Data personel berhasil diimpor.');
+        if (count($rows) <= 1) {
+            return redirect()->back()->with('error', 'File tidak memiliki data personel.');
+        }
+
+        $db = \Config\Database::connect();
+        $db->transBegin();
+
+        $berhasil = 0;
+        $duplikat = 0;
+        $dilewati = 0;
+        $nrpDalamFile = [];
+
+        // Mulai dari baris kedua karena baris pertama adalah header
+        foreach (array_slice($rows, 1) as $data) {
+
+            $nrp = trim((string) ($data[0] ?? ''));
+            $nama = trim((string) ($data[1] ?? ''));
+            $pangkat = trim((string) ($data[2] ?? ''));
+            $subbid = trim((string) ($data[3] ?? ''));
+            $ur = trim((string) ($data[4] ?? ''));
+            $jenisKelamin = strtoupper(trim((string) ($data[5] ?? 'L')));
+
+            // Lewati baris yang benar-benar kosong
+            if (
+                $nrp === '' &&
+                $nama === '' &&
+                $pangkat === '' &&
+                $subbid === '' &&
+                $ur === ''
+            ) {
+                continue;
+            }
+
+            // Validasi data wajib
+            if (
+                $nrp === '' ||
+                $nama === '' ||
+                $pangkat === '' ||
+                $subbid === '' ||
+                $ur === ''
+            ) {
+                $dilewati++;
+                continue;
+            }
+
+            // Periksa NRP duplikat dalam file
+            if (in_array($nrp, $nrpDalamFile, true)) {
+                $duplikat++;
+                continue;
+            }
+
+            $nrpDalamFile[] = $nrp;
+
+            // Periksa NRP yang sudah ada di database,
+            // termasuk data yang sudah dihapus sementara
+            $existing = $this->personelModel
+                ->withDeleted()
+                ->where('nrp_nip', $nrp)
+                ->first();
+
+            if ($existing) {
+                $duplikat++;
+                continue;
+            }
+
+            // Generate QR Code
+            $qrPath = $this->generateQRCode($nrp);
+
+            // Simpan data personel
+            $saved = $this->personelModel->save([
+                'nrp_nip'       => $nrp,
+                'nama'          => $nama,
+                'pangkat'       => $pangkat,
+                'subbid'        => $subbid,
+                'ur'            => $ur,
+                'jenis_kelamin' => in_array($jenisKelamin, ['L', 'P'], true)
+                    ? $jenisKelamin
+                    : 'L',
+                'qr_code'       => $qrPath,
+            ]);
+
+            if ($saved) {
+                $berhasil++;
+            } else {
+                throw new \RuntimeException('Gagal menyimpan data NRP ' . $nrp);
             }
         }
 
-        return redirect()->back()->with('error', 'Gagal mengunggah file. Pastikan format file .csv');
-    }
+        // Periksa transaksi database
+        if ($db->transStatus() === false) {
+            $db->transRollback();
 
+            return redirect()->to('/admin/data-personel')
+                ->with('error', 'Import gagal. Data tidak berhasil disimpan.');
+        }
+
+        $db->transCommit();
+
+        return redirect()->to('/admin/data-personel')->with(
+            'success',
+            "Import selesai. Berhasil: {$berhasil}, Duplikat: {$duplikat}, Dilewati: {$dilewati}."
+        );
+
+    } catch (\Throwable $e) {
+
+        if (isset($db) && $db->transStatus() !== false) {
+            $db->transRollback();
+        }
+
+        log_message('error', 'Import personel gagal: ' . $e->getMessage());
+
+        return redirect()->to('/admin/data-personel')
+            ->with('error', 'Import gagal. Periksa format Excel dan data di dalamnya.');
+    }
+}
     // UPDATE DATA PERSONEL
     public function update($id)
     {

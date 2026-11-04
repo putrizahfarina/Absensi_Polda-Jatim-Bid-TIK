@@ -92,6 +92,17 @@
                 <i class="fas fa-plus mr-1"></i> Tambah
             </button>
 
+            <!-- TOMBOL IMPORT EXCEL -->
+            <button type="button"
+                    class="btn btn-danger font-weight-bold px-3 py-2"
+                    style="border-radius: 8px; font-size: 13px; text-transform: uppercase; cursor: pointer;"
+                    data-toggle="modal"
+                    data-target="#modalImportPersonel"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalImportPersonel">
+                <i class="fas fa-file-excel mr-1"></i> Import Excel
+            </button>
+
             <button type="button" 
                     class="btn btn-outline-warning font-weight-bold px-3 py-2" 
                     style="border-radius: 8px; font-size: 13px;"
@@ -529,6 +540,153 @@
     </div>
 </div>
 
+
+
+<!-- MODAL IMPORT EXCEL -->
+<div class="modal fade" id="modalImportPersonel" tabindex="-1"
+     role="dialog" aria-labelledby="modalImportLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered"
+         role="document" style="max-width: 500px;">
+
+        <div class="modal-content"
+             style="border-radius: 16px; border: none; overflow: hidden;
+                    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+                    background-color: #ffffff;">
+
+            <div class="modal-header border-0 pt-4 px-4 pb-2"
+                 style="background: #ffffff; position: relative;">
+
+                <div>
+                    <h5 class="modal-title font-weight-bold"
+                        id="modalImportLabel"
+                        style="font-size: 20px; color: #0f172a; margin: 0;">
+                        Import Data Personel
+                    </h5>
+
+                    <p class="text-muted mb-0"
+                       style="font-size: 13px; color: #64748b;">
+                        Tambahkan banyak data personel melalui Excel
+                    </p>
+                </div>
+
+                <button type="button"
+                        class="close text-dark"
+                        data-dismiss="modal"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                        style="position: absolute; right: 20px; top: 20px;
+                               font-size: 24px; border: none;
+                               background: transparent; cursor: pointer;">
+                    &times;
+                </button>
+            </div>
+
+            <!-- HANYA SATU FORM -->
+            <form action="<?= base_url('admin/data-personel/import'); ?>"
+                  method="POST"
+                  enctype="multipart/form-data">
+
+                <?= csrf_field(); ?>
+
+                <div class="modal-body px-4 py-3"
+                     style="background: #ffffff;">
+
+                    <div class="form-group mb-3">
+
+                        <label for="file_excel"
+                               class="font-weight-bold mb-2"
+                               style="font-size: 13px; color: #0f172a;
+                                      display: block;">
+                            Pilih File Excel
+                        </label>
+
+                        <!-- INPUT FILE -->
+                        <input type="file"
+                               name="file_excel"
+                               id="file_excel"
+                               class="form-control"
+                               accept=".xlsx,.xls,.csv"
+                               required
+                               style="display: block; width: 100%;
+                                      height: auto; padding: 10px;
+                                      border-radius: 8px;
+                                      border: 1px solid #cbd5e1;
+                                      font-size: 13px;
+                                      color: #0f172a;
+                                      background: #ffffff;">
+                    </div>
+
+                    <!-- INFORMASI FORMAT -->
+                    <div style="background: #eff6ff;
+                                border: 1px solid #bfdbfe;
+                                padding: 12px; border-radius: 8px;">
+
+                        <p style="font-size: 12px; color: #1e40af;
+                                  font-weight: 700; margin-bottom: 6px;">
+                            <i class="fas fa-info-circle"></i>
+                            Format Kolom Excel
+                        </p>
+
+                        <p style="font-size: 12px; color: #1e3a8a;
+                                  margin: 0; line-height: 1.8;">
+                            NRP/NIP | NAMA | PANGKAT | SUBBID | UR | JENIS_KELAMIN
+                        </p>
+                    </div>
+
+                    <!-- PERINGATAN -->
+                    <div style="background: #fff7ed;
+                                border: 1px solid #fed7aa;
+                                padding: 12px; border-radius: 8px;
+                                margin-top: 12px;">
+
+                        <p style="font-size: 12px; color: #9a3412;
+                                  margin: 0; line-height: 1.7;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Pastikan baris pertama merupakan judul kolom.
+                            NRP/NIP tidak boleh kosong dan harus unik.
+                        </p>
+                    </div>
+
+                    <p class="mt-3 mb-0"
+                       style="font-size: 12px; color: #64748b;">
+                        Format file yang diterima: .xlsx, .xls, atau .csv.
+                    </p>
+
+                </div>
+
+                <!-- TOMBOL -->
+                <div class="modal-footer border-0 px-4 pb-4 pt-2"
+                     style="background: #ffffff;
+                            display: flex; justify-content: flex-end;
+                            gap: 10px;">
+
+                    <button type="button"
+                            class="btn px-4 py-2 font-weight-bold"
+                            data-dismiss="modal"
+                            data-bs-dismiss="modal"
+                            style="border-radius: 8px; font-size: 13px;
+                                   border: 1px solid #cbd5e1;
+                                   color: #334155; background: #ffffff;">
+                        Batal
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-danger px-4 py-2 font-weight-bold"
+                            style="border-radius: 8px; font-size: 13px;">
+                        <i class="fas fa-file-import mr-1"></i>
+                        Import Data
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
 <!-- Library SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -584,6 +742,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (urFilterSelect) {
         urFilterSelect.addEventListener('change', filterTable);
+    }
+
+    // VALIDASI FILE IMPORT EXCEL DAN TAMPILKAN NAMA FILE
+    const inputExcel = document.getElementById('file_excel');
+    const namaFileExcel = document.getElementById('namaFileExcel');
+    const formImport = document.getElementById('formImportPersonel');
+
+    if (inputExcel) {
+        inputExcel.addEventListener('change', function () {
+            const file = this.files && this.files[0];
+            if (!file) {
+                if (namaFileExcel) namaFileExcel.textContent = 'Belum ada file yang dipilih.';
+                return;
+            }
+
+            const allowedExtensions = ['xlsx', 'xls', 'csv'];
+            const extension = file.name.split('.').pop().toLowerCase();
+            if (!allowedExtensions.includes(extension)) {
+                Swal.fire({ icon: 'error', title: 'Format Tidak Sesuai', text: 'Silakan pilih file Excel .xlsx, .xls, atau .csv.' });
+                this.value = '';
+                if (namaFileExcel) namaFileExcel.textContent = 'Belum ada file yang dipilih.';
+                return;
+            }
+
+            if (namaFileExcel) namaFileExcel.textContent = 'File dipilih: ' + file.name;
+        });
+    }
+
+    if (formImport) {
+        formImport.addEventListener('submit', function (e) {
+            if (!inputExcel || !inputExcel.files || inputExcel.files.length === 0) {
+                e.preventDefault();
+                Swal.fire({ icon: 'warning', title: 'File Belum Dipilih', text: 'Silakan pilih file Excel terlebih dahulu.' });
+            }
+        });
     }
 
     document.querySelectorAll('.btn-pulihkan-data').forEach(button => {

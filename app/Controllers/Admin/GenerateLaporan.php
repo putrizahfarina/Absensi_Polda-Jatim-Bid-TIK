@@ -341,81 +341,80 @@ class GenerateLaporan extends BaseController
             ->findAll();
     }
 
-    // ========================================================
-    // LAPORAN HARIAN
-    // ========================================================
+// ========================================================
+// LAPORAN HARIAN
+// ========================================================
 
-    private function generateLaporanHarian(
-        string $tanggal,
-        string $type
-    ) {
-        $personel = $this->ambilPersonel();
+private function generateLaporanHarian(
+    string $tanggal,
+    string $type
+) {
+    $personel = $this->ambilPersonel();
 
-        if (empty($personel)) {
-            return redirect()
-                ->to('/admin/laporan')
-                ->with('msg', 'Data personel kosong.');
-        }
-
-        $presensi = $this->presensiModel
-            ->where('waktu_masuk >=', $tanggal . ' 00:00:00')
-            ->where('waktu_masuk <=', $tanggal . ' 23:59:59')
-            ->orderBy('waktu_masuk', 'ASC')
-            ->findAll();
-
-        $rekapStatus = $this->hitungRekapStatus($presensi);
-
-        /*
-         * Jika terdapat beberapa catatan pada hari yang sama,
-         * data tabel harian memakai catatan presensi terakhir.
-         */
-        $presensiByPersonel = [];
-
-        foreach ($presensi as $absen) {
-            $id = (string) ($absen['personel_id'] ?? '');
-
-            if ($id !== '') {
-                $presensiByPersonel[$id] = $absen;
-            }
-        }
-
-        $dataAbsensi = [];
-
-        foreach ($personel as $p) {
-            $id = (string) ($p['id'] ?? '');
-            $absen = $presensiByPersonel[$id] ?? null;
-
-            $dataAbsensi[] = [
-                'personel_id' => $p['id'] ?? null,
-                'nrp_nip' => $p['nrp_nip'] ?? '-',
-                'nama' => $p['nama'] ?? '-',
-                'pangkat' => $p['pangkat'] ?? '-',
-                'subbid' => $p['subbid'] ?? '-',
-                'ur' => $p['ur'] ?? '-',
-                'jabatan' => $p['jabatan'] ?? '-',
-                'satker' => $p['satker'] ?? '-',
-                'jenis_kelamin' => $p['jenis_kelamin'] ?? '-',
-                'status' => $absen
-                    ? $this->normalisasiStatus(
-                        (string) ($absen['status'] ?? '')
-                    )
-                    : null,
-                'waktu_masuk' => $absen['waktu_masuk'] ?? null,
-                'keterangan' => $absen['keterangan'] ?? '-',
-            ];
-        }
-
-        return $this->keluarkanLaporan(
-            $tanggal,
-            $tanggal,
-            'harian',
-            $type,
-            $dataAbsensi,
-            $presensi,
-            $rekapStatus
-        );
+    if (empty($personel)) {
+        return redirect()
+            ->to('/admin/laporan')
+            ->with('msg', 'Data personel kosong.');
     }
 
+    $presensi = $this->presensiModel
+        ->where('waktu_masuk >=', $tanggal . ' 00:00:00')
+        ->where('waktu_masuk <=', $tanggal . ' 23:59:59')
+        ->orderBy('waktu_masuk', 'ASC')
+        ->findAll();
+$rekapStatus = $this->hitungRekapStatus($presensi);
+
+    // Hitung rekap status dari data presensi
+    $rekapStatus = $this->hitungRekapStatus($presensi);
+
+    // Simpan catatan presensi terakhir setiap personel
+    $presensiByPersonel = [];
+
+    foreach ($presensi as $absen) {
+        $id = (string) ($absen['personel_id'] ?? '');
+
+        if ($id !== '') {
+            $presensiByPersonel[$id] = $absen;
+        }
+    }
+
+    // Siapkan data absensi seluruh personel
+    $dataAbsensi = [];
+
+    foreach ($personel as $p) {
+        $id = (string) ($p['id'] ?? '');
+        $absen = $presensiByPersonel[$id] ?? null;
+
+        $dataAbsensi[] = [
+            'personel_id' => $p['id'] ?? null,
+            'nrp_nip' => $p['nrp_nip'] ?? '-',
+            'nama' => $p['nama'] ?? '-',
+            'pangkat' => $p['pangkat'] ?? '-',
+            'subbid' => $p['subbid'] ?? '-',
+            'ur' => $p['ur'] ?? '-',
+            'jabatan' => $p['jabatan'] ?? '-',
+            'satker' => $p['satker'] ?? '-',
+            'jenis_kelamin' => $p['jenis_kelamin'] ?? '-',
+            'status' => $absen
+                ? $this->normalisasiStatus(
+                    (string) ($absen['status'] ?? '')
+                )
+                : null,
+            'waktu_masuk' => $absen['waktu_masuk'] ?? null,
+            'keterangan' => $absen['keterangan'] ?? '-',
+        ];
+    }
+
+   return $this->keluarkanLaporan(
+    $tanggal,
+    $tanggal,
+    'harian',
+    $type,
+    $dataAbsensi,
+    $presensi,
+    $this->hitungRekapStatus($presensi)
+);
+}
     // ========================================================
     // LAPORAN MINGGUAN DAN BULANAN
     // ========================================================
@@ -443,7 +442,7 @@ class GenerateLaporan extends BaseController
             ->where('waktu_masuk <=', $tanggalAkhir . ' 23:59:59')
             ->orderBy('waktu_masuk', 'ASC')
             ->findAll();
-
+$rekapStatus = $this->hitungRekapStatus($presensi);
         /*
          * Rekap keseluruhan dihitung dari semua catatan presensi
          * pada periode yang dipilih.
