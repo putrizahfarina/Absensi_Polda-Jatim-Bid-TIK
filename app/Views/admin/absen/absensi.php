@@ -17,7 +17,7 @@
         background: linear-gradient(135deg, #7a0c1e 0%, #3b050d 60%, #1a0205 100%);
         border-radius: 20px;
         padding: 24px 28px;
-        margin-top: 15px; /* Jarak aman biar gak nabrak header atas */
+        margin-top: 15px;
         margin-bottom: 24px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         position: relative;
@@ -61,13 +61,14 @@
         border-radius: 8px;
         padding: 6px 14px;
         font-size: 0.85rem;
+        font-weight: 600;
         display: inline-flex;
         align-items: center;
         backdrop-filter: blur(4px);
         margin-right: 15px !important;
     }
 
-    /* Tombol Simpan Gradient Maroon-Merah */
+    /* Tombol Simpan */
     .absensi-wrapper .btn-simpan-sipatik {
         background: linear-gradient(135deg, #9f1239 0%, #be123c 100%);
         border: none;
@@ -94,8 +95,15 @@
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
     }
 
+    /* Typography Hierarki (Hitam & Tebal) */
+    .absensi-wrapper .card-title-custom {
+        color: #000000;
+        font-weight: 800;
+        letter-spacing: -0.2px;
+    }
+
     .absensi-wrapper .section-label {
-        color: #d97706;
+        color: #000000;
         font-size: .8rem;
         font-weight: 800;
         letter-spacing: 0.5px;
@@ -104,38 +112,32 @@
         text-transform: uppercase;
     }
 
-    /* Avatar Circle */
-    .absensi-wrapper .avatar-circle {
-        width: 42px;
-        height: 42px;
-        flex-shrink: 0;
-        border-radius: 50%;
-        background: #f1f5f9;
-        color: #334155;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        text-transform: uppercase;
-        border: 1px solid #e2e8f0;
-    }
-
     /* Tombol Status Pengecualian */
     .absensi-wrapper .btn-status {
         flex: 1 1 0%;
         min-width: 85px;
         padding: 10px 12px;
         text-align: center;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #cbd5e1;
         border-radius: 12px;
         background: #ffffff;
-        color: #475569;
+        color: #000000;
         transition: all 0.2s ease;
+    }
+
+    .absensi-wrapper .btn-status strong {
+        font-weight: 800;
+        font-size: 1.1rem;
+    }
+
+    .absensi-wrapper .btn-status small {
+        font-weight: 700;
+        color: #475569;
     }
 
     .absensi-wrapper .btn-status:hover {
         background: #f8fafc;
-        border-color: #cbd5e1;
+        border-color: #94a3b8;
     }
 
     .absensi-wrapper .btn-status.active {
@@ -152,15 +154,17 @@
 
     /* Dropdown Trigger Box */
     .absensi-wrapper .search-box-trigger {
-        border: 1px solid #cbd5e1;
+        border: 1px solid #94a3b8;
         border-radius: 12px;
-        padding: 14px 18px;
+        padding: 12px 16px;
         background: #ffffff;
         cursor: pointer;
         display: flex;
         justify-content: space-between;
         align-items: center;
         transition: border-color 0.2s;
+        color: #000000;
+        font-weight: 500;
     }
 
     .absensi-wrapper .search-box-trigger:hover {
@@ -173,7 +177,7 @@
         left: 0;
         right: 0;
         background: #ffffff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #cbd5e1;
         border-radius: 14px;
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         z-index: 9999;
@@ -184,7 +188,7 @@
     .absensi-wrapper .inner-search-wrapper {
         padding: 12px 16px;
         background: #f8fafc;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid #e2e8f0;
         display: flex;
         align-items: center;
     }
@@ -196,10 +200,12 @@
         background: transparent !important;
         width: 100%;
         padding-left: 8px;
+        color: #000000;
+        font-weight: 500;
     }
 
     .absensi-wrapper .personel-item {
-        padding: 12px 18px;
+        padding: 10px 16px;
         border-bottom: 1px solid #f1f5f9;
         cursor: pointer;
         display: flex;
@@ -209,35 +215,64 @@
     }
 
     .absensi-wrapper .personel-item:hover {
-        background: #f8fafc;
+        background: #f1f5f9;
+    }
+
+    /* GRID UNTUK DUA KOLOM KARTU PENGECUALIAN */
+    .absensi-wrapper .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
 
     /* Kartu Personel */
     .absensi-wrapper .chip-personel {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 14px 16px;
-        margin-bottom: 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 12px 14px;
         transition: all 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
-    /* CSS MERAH + CORET SAAT DITANDAI HAPUS */
     .absensi-wrapper .chip-personel.marked-delete {
         background-color: #fff1f2 !important;
         border-color: #fecdd3 !important;
     }
 
+    .absensi-wrapper .avatar-circle {
+        width: 34px;
+        height: 34px;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #f1f5f9;
+        color: #000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        text-transform: uppercase;
+        border: 1px solid #cbd5e1;
+    }
+
     .absensi-wrapper .nama-personel {
-        color: #0f172a;
-        font-size: 1.05rem;
+        color: #000000;
+        font-weight: 600;
+        font-size: 0.9rem;
+        line-height: 1.2;
+        margin-bottom: 2px;
         transition: all 0.2s;
     }
 
     .absensi-wrapper .detail-personel {
-        color: #64748b;
-        font-size: .85rem;
+        color: #475569;
+        font-weight: 500;
+        font-size: 0.75rem;
         transition: all .2s;
     }
 
@@ -253,13 +288,13 @@
 
     /* Tombol Toggle Hapus & Undo */
     .absensi-wrapper .btn-toggle-hapus {
-        width: 34px;
-        height: 34px;
+        width: 28px;
+        height: 28px;
         flex-shrink: 0;
         border-radius: 50%;
         background: transparent;
-        color: #94a3b8;
-        font-size: 20px;
+        color: #64748b;
+        font-size: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -276,7 +311,7 @@
     .absensi-wrapper .btn-toggle-hapus.undo {
         background: #ffe4e6 !important;
         color: #e11d48 !important;
-        font-size: 14px !important;
+        font-size: 12px !important;
     }
 
     .absensi-wrapper .btn-toggle-hapus.undo:hover {
@@ -285,17 +320,21 @@
 
     /* Input Keterangan */
     .absensi-wrapper .input-keterangan {
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
-        padding: 10px 14px;
-        font-size: .9rem;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        height: 32px;
+        font-weight: 500;
+        color: #000000;
         background: #f8fafc;
         transition: border-color 0.2s;
     }
 
     .absensi-wrapper .input-keterangan:focus {
-        border-color: #9f1239;
+        border-color: #000000;
         background: #ffffff;
+        box-shadow: none;
     }
 
     .absensi-wrapper .chip-personel.marked-delete .input-keterangan {
@@ -305,67 +344,24 @@
         opacity: .55 !important;
     }
 
-    /* Summary Widgets Persis Seperti Dashboard */
-    .absensi-wrapper .widget-sipatik {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 16px;
-        position: relative;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-        border: 1px solid #f1f5f9;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+    /* Textarea Deskripsi Kegiatan */
+    .absensi-wrapper #deskripsiKegiatan {
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        color: #000000;
+        font-weight: 500;
+    }
+    .absensi-wrapper #deskripsiKegiatan:focus {
+        border-color: #000000;
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
     }
 
-    .absensi-wrapper .widget-sipatik .icon-box {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #ffffff;
-        font-size: 1rem;
-    }
-
-    .absensi-wrapper .widget-sipatik .badge-pill-tag {
-        background: #f1f5f9;
-        color: #64748b;
-        font-size: 0.65rem;
-        font-weight: 800;
-        padding: 4px 8px;
-        border-radius: 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* Label Dikecilkan */
-    .absensi-wrapper .widget-sipatik .widget-label {
-        font-size: 0.65rem;            
-        font-weight: 800;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-top: 6px;               
-    }
-
-    /* Angka Jumlah Dikecilkan */
-    .absensi-wrapper .widget-sipatik .widget-value {
-        font-size: 1.25rem;            
-        font-weight: 800;
-        color: #0f172a;
-        line-height: 1;
-        margin-top: 2px;
-    }
-
-    /* Badges Status */
+    /* Badges Status di Tabel */
     .badge-status {
         font-size: .85rem;
         padding: 6px 12px;
         border-radius: 20px;
-        font-weight: 600;
+        font-weight: 700;
         display: inline-flex;
         gap: 6px;
         align-items: center;
@@ -376,29 +372,15 @@
     .badge-primary { background: #e0f2fe; color: #0369a1; }
     .badge-izin { background: #fef9c3; color: #a16207; }
     .badge-alfa { background: #fee2e2; color: #b91c1c; }
-    .badge-other { background: #f1f5f9; color: #475569; }
-
-    .num-zebra-odd {
-        background: #1e0508;
-        color: white;
-        border-radius: 6px;
-        padding: 4px 10px;
-        font-weight: bold;
-    }
-
-    .num-zebra-even {
-        background: #f1f5f9;
-        color: #475569;
-        border-radius: 6px;
-        padding: 4px 10px;
-        font-weight: bold;
-    }
+    .badge-other { background: #f1f5f9; color: #000000; }
 
     /* Input Controls */
     .absensi-wrapper .form-control,
     .absensi-wrapper .form-select {
-        border-color: #e2e8f0;
+        border-color: #cbd5e1;
         border-radius: 10px;
+        color: #000000;
+        font-weight: 500;
     }
 
     @media(max-width:768px) {
@@ -406,18 +388,12 @@
             min-width: 75px;
             padding: 8px 10px;
         }
-
         #tableSearch, #tableFilterStatus {
             width: 100% !important;
         }
-    }
-
-    /* Card Container Tabel */
-    .card-custom {
-        background: #ffffff;
-        border-radius: 18px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-        border: 1px solid #e2e8f0;
+        .absensi-wrapper .cards-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     /* Tabel Utama */
@@ -427,27 +403,25 @@
         border-spacing: 0;
     }
 
-    /* Header Tabel */
     .table-sipatik thead th {
-        background: #e2e8f0;
-        color: #475569;
-        font-size: 0.75rem;
+        background: #f1f5f9;
+        color: #000000;
+        font-size: 0.8rem;
         font-weight: 800;
         letter-spacing: 0.6px;
         padding: 14px 16px;
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #cbd5e1;
+        text-transform: uppercase;
     }
 
-    /* Zebra Striping (Ganti Warna Cerah & Gelap per Baris) */
     .table-sipatik tbody tr:nth-child(odd) {
         background-color: #ffffff; 
     }
 
     .table-sipatik tbody tr:nth-child(even) {
-        background-color: #e2e8f0; 
+        background-color: #f8fafc; 
     }
 
-    /* Hover Effect per Baris */
     .table-sipatik tbody tr {
         transition: background-color 0.15s ease;
     }
@@ -459,76 +433,37 @@
     .table-sipatik tbody td {
         padding: 12px 16px;
         vertical-align: middle;
-        font-size: 0.875rem;
-        color: #334155;
-        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+        border-bottom: 1px solid #e2e8f0;
     }
 
-    
-   /* Nomor Urut Mengikuti Warna Zebra Baris */
-.no-badge {
-    width: 26px;
-    height: 26px;
-    background: transparent;
-    color: #475569;
-    border: 1px solid #cbd5e1;
-    font-weight: 700;
-    font-size: 0.75rem;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-    .avatar-initial {
-        width: 30px;
-        height: 30px;
-        background: #e2e8f0;
-        color: #475569;
-        font-weight: 700;
-        font-size: 0.75rem;
-        border-radius: 50%;
+    .no-badge {
+        width: 28px;
+        height: 28px;
+        background: #ffffff;
+        color: #000000;
+        border: 1px solid #94a3b8;
+        font-weight: 800;
+        font-size: 0.8rem;
+        border-radius: 6px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        margin-right: 10px;
     }
 
-    .tag-subbid, .tag-ur {
-        background: #f1f5f9;
-        color: #475569;
-        font-size: 0.72rem;
-        font-weight: 700;
-        padding: 4px 8px;
-        border-radius: 6px;
-        border: 1px solid #cbd5e1;
-    }
-
-    .badge-status-pill {
-        font-size: 0.75rem;
-        font-weight: 700;
-        padding: 5px 12px;
-        border-radius: 20px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    /* Header Tabel Modern */
     .table-header-wrapper {
         padding-bottom: 16px;
         margin-bottom: 8px;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid #e2e8f0;
     }
 
     .table-title {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: 800;
-        color: #1e293b;
+        color: #000000;
         letter-spacing: -0.2px;
     }
 
-    /* Custom Search Box Modern */
     .search-box-wrapper {
         position: relative;
         width: 240px;
@@ -539,7 +474,7 @@
         left: 14px;
         top: 50%;
         transform: translateY(-50%);
-        color: #94a3b8;
+        color: #64748b;
         font-size: 0.85rem;
         pointer-events: none;
         transition: color 0.2s;
@@ -548,34 +483,33 @@
     .search-box-wrapper input {
         padding-left: 38px !important;
         padding-right: 12px;
-        height: 38px;
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
+        height: 40px;
+        background-color: #ffffff;
+        border: 1px solid #cbd5e1;
         border-radius: 10px;
-        font-size: 0.85rem;
-        color: #334155;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #000000;
         transition: all 0.2s ease;
     }
 
     .search-box-wrapper input:focus {
-        background-color: #ffffff;
-        border-color: #7a0c1e;
-        box-shadow: 0 0 0 3px rgba(122, 12, 30, 0.1);
+        border-color: #000000;
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
     }
 
     .search-box-wrapper input:focus + i {
-        color: #7a0c1e;
+        color: #000000;
     }
 
-    /* Filter Select Modern */
     .select-filter-custom {
-        height: 38px;
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
+        height: 40px;
+        background-color: #ffffff;
+        border: 1px solid #cbd5e1;
         border-radius: 10px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #475569;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #000000;
         padding-left: 12px;
         padding-right: 30px;
         cursor: pointer;
@@ -583,14 +517,42 @@
     }
 
     .select-filter-custom:focus {
-        background-color: #ffffff;
-        border-color: #7a0c1e;
-        box-shadow: 0 0 0 3px rgba(122, 12, 30, 0.1);
+        border-color: #000000;
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Tombol Paginasi Tambahan */
+    .page-btn-custom {
+        min-width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #475569;
+        transition: all 0.2s;
+    }
+    .page-btn-custom:hover:not(.disabled) {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    .page-btn-custom.active {
+        background: #000000;
+        color: #ffffff;
+        border-color: #000000;
+    }
+    .page-btn-custom.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 </style>
 
 <div class="container-fluid pt-3 mt-2 px-2 absensi-wrapper">
-    <!-- Hero Header Banner dengan jarak aman -->
+    <!-- Hero Header Banner -->
     <div class="hero-header d-flex justify-content-between align-items-center flex-wrap gap-3 mt-3">
         <div>
             <span class="hero-subtitle-tag"><i class="fas fa-circle me-1" style="font-size:8px"></i> SISTEM INFORMASI BIDANG TIK</span>
@@ -608,121 +570,92 @@
 
     <!-- Card Input Absensi -->
     <div class="card-custom p-4 mb-4">
-        <h5 class="fw-bold mb-3" style="color:#9f1239">
-            <i class="fas fa-clipboard-check me-2"></i> Input Absensi Pengecualian
+        <h5 class="card-title-custom mb-3">
+            <i class="fas fa-clipboard-check me-2 text-danger"></i> Input Absensi Pengecualian
         </h5>
 
         <div class="alert mb-4"
-            style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:12px;font-size:0.9rem">
+            style="background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;border-radius:12px;font-size:0.9rem;font-weight:500;">
             <i class="fas fa-info-circle me-2"></i>
-            Semua personel otomatis tercatat <strong>Hadir (H)</strong>.
+            Semua personel otomatis tercatat <strong style="color:#0c4a6e;font-weight:800;">Hadir (H)</strong>.
             Tandai hanya personel yang tidak hadir atau memiliki status pengecualian.
         </div>
 
-        <label class="form-label text-uppercase text-muted fw-bold mb-2"
-            style="font-size:.75rem; letter-spacing:0.5px">PILIH STATUS PENGECUALIAN</label>
+        <label class="form-label text-uppercase mb-2 section-label">PILIH STATUS PENGECUALIAN</label>
 
         <div class="d-flex flex-wrap gap-2 mb-4" id="statusContainer">
-            <button type="button" class="btn btn-status active" data-status="Sakit"><strong>S</strong><br><small style="font-size: 0.68rem; font-weight: 700;">SAKIT</small></button>
-            <button type="button" class="btn btn-status" data-status="Dinas Luar"><strong>DL</strong><br><small style="font-size: 0.68rem; font-weight: 700;">DINAS LUAR</small></button>
-            <button type="button" class="btn btn-status" data-status="Izin"><strong>I</strong><br><small style="font-size: 0.68rem; font-weight: 700;">IZIN</small></button>
-            <button type="button" class="btn btn-status" data-status="Alfa"><strong>A</strong><br><small style="font-size: 0.68rem; font-weight: 700;">ALFA</small></button>
-            <button type="button" class="btn btn-status" data-status="Lepas Dinas"><strong>LD</strong><br><small style="font-size: 0.68rem; font-weight: 700;">LEPAS DINAS</small></button>
-            <button type="button" class="btn btn-status" data-status="Cuti"><strong>C</strong><br><small style="font-size: 0.68rem; font-weight: 700;">CUTI</small></button>
-            <button type="button" class="btn btn-status" data-status="Terlambat"><strong>TL</strong><br><small style="font-size: 0.68rem; font-weight: 700;">TERLAMBAT</small></button>
-            <button type="button" class="btn btn-status" data-status="Pendidikan"><strong>DIK</strong><br><small style="font-size: 0.68rem; font-weight: 700;">PENDIDIKAN</small></button>
-            <button type="button" class="btn btn-status" data-status="BKO"><strong>BKO</strong><br><small style="font-size: 0.68rem; font-weight: 700;">BKO</small></button>
+            <button type="button" class="btn btn-status active" data-status="Sakit"><strong>S</strong><br><small>SAKIT</small></button>
+            <button type="button" class="btn btn-status" data-status="Dinas Luar"><strong>DL</strong><br><small>DINAS LUAR</small></button>
+            <button type="button" class="btn btn-status" data-status="Izin"><strong>I</strong><br><small>IZIN</small></button>
+            <button type="button" class="btn btn-status" data-status="Alfa"><strong>A</strong><br><small>ALFA</small></button>
+            <button type="button" class="btn btn-status" data-status="Lepas Dinas"><strong>LD</strong><br><small>LEPAS DINAS</small></button>
+            <button type="button" class="btn btn-status" data-status="Cuti"><strong>C</strong><br><small>CUTI</small></button>
+            <button type="button" class="btn btn-status" data-status="Terlambat"><strong>TL</strong><br><small>TERLAMBAT</small></button>
+            <button type="button" class="btn btn-status" data-status="Pendidikan"><strong>DIK</strong><br><small>PENDIDIKAN</small></button>
+            <button type="button" class="btn btn-status" data-status="BKO"><strong>BKO</strong><br><small>BKO</small></button>
         </div>
 
-        <label class="form-label text-uppercase text-muted fw-bold mb-2"
-            id="lblCariPersonel" style="font-size:.75rem; letter-spacing:0.5px">
+        <label class="form-label text-uppercase mb-2 section-label" id="lblCariPersonel">
             CARI NAMA PERSONEL UNTUK DITANDAI (SAKIT)
         </label>
 
         <div class="position-relative mb-2">
             <div id="dropdownTrigger" class="search-box-trigger">
-                <span id="triggerText" class="text-muted" style="font-size:0.95rem;">Cari nama / NRP / divisi...</span>
-                <i id="triggerIcon" class="fas fa-chevron-down text-muted"></i>
+                <span id="triggerText" style="font-size:0.9rem;">Cari nama / NRP / divisi...</span>
+                <i id="triggerIcon" class="fas fa-chevron-down" style="color:#64748b"></i>
             </div>
 
             <div id="customDropdownMenu" class="dropdown-floating-menu d-none">
                 <div class="inner-search-wrapper">
-                    <i class="fas fa-search text-muted ms-1"></i>
-                    <input type="text" id="innerSearchInput"
-                        class="inner-search-input"
-                        placeholder="Cari nama, NRP, divisi..." autocomplete="off">
+                    <i class="fas fa-search ms-1" style="color:#64748b"></i>
+                    <input type="text" id="innerSearchInput" class="inner-search-input" placeholder="Ketik nama atau NRP..." autocomplete="off">
                 </div>
-                <div id="personnelListContainer"
-                    style="max-height:280px;overflow-y:auto"></div>
+                <div id="personnelListContainer" style="max-height:280px;overflow-y:auto"></div>
             </div>
         </div>
 
-        <div class="text-muted mb-4" id="textStats" style="font-size:.85rem"></div>
+        <div class="mb-4" id="textStats" style="font-size:.85rem;font-weight:600;color:#475569;"></div>
         <div id="exceptionChipsContainer"></div>
     </div>
-        <div id="exceptionChipsContainer"></div>
+
+    <!-- Deskripsi Kegiatan -->
+    <div class="card-custom p-4 mb-4">
+        <h5 class="card-title-custom mb-3">
+            <i class="fas fa-clipboard-list me-2 text-danger"></i> Deskripsi Kegiatan
+        </h5>
+
+        <textarea
+            id="deskripsiKegiatan"
+            name="deskripsi"
+            class="form-control"
+            rows="4"
+            maxlength="5000"
+            placeholder="  Tuliskan deskripsi kegiatan hari ini..."
+        ><?= esc($deskripsiKegiatan ?? '') ?></textarea>
     </div>
 
-    <!-- TAMBAHAN: DESKRIPSI KEGIATAN -->
-   <!-- Deskripsi Kegiatan -->
-<div class="card-custom p-3 mb-4">
-    <h5 class="fw-bold mb-2" style="color: #b5121b;">
-        <i class="fas fa-clipboard-list me-2"></i>
-        Deskripsi Kegiatan
-    </h5>
-
-    <textarea
-        id="deskripsiKegiatan"
-        name="deskripsi"
-        class="form-control"
-        rows="4"
-        maxlength="5000"
-        placeholder="Tuliskan deskripsi kegiatan hari ini..."
-    ><?= esc($deskripsiKegiatan ?? '') ?></textarea>
-</div>
-    <!-- AKHIR TAMBAHAN DAFTAR KEGIATAN -->
-
-    
     <!-- Ringkasan Statistik -->
-<!-- Header Ringkasan Hari Ini -->
-<div class="card-custom p-3 mb-3"
-     style="background: #850c13 !important;
-            border: 1px solid #b5121b;
-            border-radius: 12px;">
-
-    <div class="d-flex align-items-center gap-3">
-        <div style="width: 42px;
-                    height: 42px;
-                    background: rgba(255,255,255,0.15);
-                    border-radius: 10px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    flex-shrink: 0;">
-            <i class="fas fa-chart-pie"
-               style="color: #ffffff; font-size: 20px;"></i>
-        </div>
-
-        <div>
-            <h5 class="fw-bold mb-1"
-                style="color: #ffffff !important;
-                       font-size: 16px;">
-                RINGKASAN HARI INI
-            </h5>
-
-            <p class="mb-0"
-               style="color: #fce7e7 !important; font-size: 12px;">
-                Rekap jumlah personel berdasarkan status absensi
-            </p>
+    <div class="card-custom p-3 mb-3" style="background: #700e0e !important; border-radius: 16px;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width: 42px; height: 42px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-chart-pie" style="color: #ffffff; font-size: 20px;"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold mb-1" style="color: #ffffff !important; font-size: 1.1rem; letter-spacing: 0.5px;">
+                    RINGKASAN HARI INI
+                </h5>
+                <p class="mb-0" style="color: #cbd5e1 !important; font-size: 0.85rem; font-weight: 500;">
+                    Rekap jumlah personel berdasarkan status absensi
+                </p>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Card Statistik per Status -->
-<div id="summaryContainer" class="row g-3 mb-4"></div>
+    <!-- Card Statistik per Status -->
+    <div id="summaryContainer" class="row g-3 mb-4"></div>
 
     <!-- Tabel Absensi Card -->
-    <div class="card-custom p-4">
+    <div class="card-custom p-4 mb-4">
         <!-- Header & Filter Tabel Absensi -->
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 table-header-wrapper">
             <div class="d-flex align-items-center gap-2">
@@ -770,6 +703,13 @@
                 <tbody id="tableAbsenBody"></tbody>
             </table>
         </div>
+        
+        <!-- Paginasi Container (Baru Ditambahkan) -->
+        <div id="tablePagination" class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+            <div id="paginationInfo" style="font-size: 0.85rem; color: #64748b; font-weight: 600;"></div>
+            <div id="paginationButtons" class="d-flex gap-1 flex-wrap"></div>
+        </div>
+
     </div>
 </div>
 
@@ -781,6 +721,11 @@ const existingAbsen = <?= json_encode($absenHariIni ?? [], JSON_HEX_TAG | JSON_H
 
 let selectedStatus = 'Sakit';
 let exceptions = [];
+
+// Variabel Paginasi Client-Side
+const rowsPerPage = 15;
+let currentPage = 1;
+let currentFilteredData = [];
 
 function generateUid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -858,14 +803,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const shouldShow = show !== undefined ? show : menu.classList.contains('d-none');
         if (shouldShow) {
             menu.classList.remove('d-none');
-            trigger.style.borderColor = '#9f1239';
-            icon.className = 'fas fa-chevron-up text-danger';
+            trigger.style.borderColor = '#000000';
+            icon.className = 'fas fa-chevron-up text-dark';
             renderDropdownList(searchInput.value);
             setTimeout(() => searchInput.focus(), 50);
         } else {
             menu.classList.add('d-none');
-            trigger.style.borderColor = '#cbd5e1';
-            icon.className = 'fas fa-chevron-down text-muted';
+            trigger.style.borderColor = '#94a3b8';
+            icon.className = 'fas fa-chevron-down';
+            icon.style.color = '#64748b';
         }
     }
 
@@ -881,10 +827,18 @@ document.addEventListener('DOMContentLoaded', function () {
         renderDropdownList(this.value);
     });
 
-    document.getElementById('tableSearch').addEventListener('input', renderTable);
-    document.getElementById('tableFilterStatus').addEventListener('change', renderTable);
+    // Reset pagination ketika melakukan pencarian atau ubah status filter
+    document.getElementById('tableSearch').addEventListener('input', () => {
+        currentPage = 1; 
+        renderTable();
+    });
+    
+    document.getElementById('tableFilterStatus').addEventListener('change', () => {
+        currentPage = 1;
+        renderTable();
+    });
 
-    /* KLIK TANDAI HAPUS (EVENT DELEGATION PADA CONTAINER CHIPS) */
+    /* KLIK TANDAI HAPUS */
     chipsContainer.addEventListener('click', function (e) {
         const btn = e.target.closest('.btn-toggle-hapus');
         if (!btn) return;
@@ -911,7 +865,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    /* Simpan absensi dengan SweetAlert2 */
+    /* Simpan absensi */
     document.getElementById('btnSimpan').addEventListener('click', async function () {
         const button = this;
         if (button.disabled) return;
@@ -946,9 +900,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<?= csrf_header() ?>': '<?= csrf_hash() ?>'
                 },
                 body: JSON.stringify({
-    exceptions: dataToSave,
-    deskripsi: document.getElementById('deskripsiKegiatan').value.trim()
-})
+                    exceptions: dataToSave,
+                    deskripsi: document.getElementById('deskripsiKegiatan').value.trim()
+                })
             });
 
             if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -957,16 +911,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
             await Swal.fire({
                 title: 'Berhasil!',
-                text: data.message || 'Absensi seluruh personel berhasil disinkronkan!',
+                text: data.message || 'Absensi seluruh personel berhasil disimpan!',
                 icon: 'success',
-                confirmButtonColor: '#7a0c1e',
+                confirmButtonColor: '#000000',
                 confirmButtonText: 'Selesai'
             });
 
             location.reload();
         } catch (error) {
             console.error(error);
-
             Swal.fire({
                 title: 'Gagal!',
                 text: 'Gagal menyimpan absensi. Periksa controller dan koneksi.',
@@ -974,7 +927,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 confirmButtonColor: '#ef4444',
                 confirmButtonText: 'Coba Lagi'
             });
-
             button.disabled = false;
             button.innerHTML = '<i class="fas fa-save me-2"></i>Simpan Absensi';
         }
@@ -987,10 +939,7 @@ function renderDropdownList(query = '') {
     if (!container) return;
 
     query = String(query).toLowerCase().trim();
-
-    const activeIds = exceptions
-        .filter(e => !e.is_deleted)
-        .map(e => String(e.personel_id));
+    const activeIds = exceptions.filter(e => !e.is_deleted).map(e => String(e.personel_id));
 
     const matches = allPersonel.filter(p => {
         if (activeIds.includes(String(p.id))) return false;
@@ -1001,7 +950,7 @@ function renderDropdownList(query = '') {
     container.innerHTML = '';
 
     if (!matches.length) {
-        container.innerHTML = '<div class="p-4 text-center text-muted small">Tidak ada personel ditemukan.</div>';
+        container.innerHTML = '<div class="p-4 text-center text-muted small fw-bold">Tidak ada personel ditemukan.</div>';
         return;
     }
 
@@ -1015,21 +964,17 @@ function renderDropdownList(query = '') {
         }
 
         item.innerHTML = `
-            <div class="avatar-circle" style="width:38px;height:38px">
-                ${escapeHtml((p.nama || '?').charAt(0).toUpperCase())}
-            </div>
+            <div class="avatar-circle">${escapeHtml((p.nama || '?').charAt(0).toUpperCase())}</div>
             <div class="flex-grow-1 overflow-hidden">
-                <div class="fw-bold text-dark text-truncate">${escapeHtml(displayName)}</div>
-                <div class="text-muted small text-truncate">
+                <div style="color:#000000; font-weight:600; font-size:0.95rem;" class="text-truncate">${escapeHtml(displayName)}</div>
+                <div style="color:#475569; font-weight:500; font-size:0.8rem;" class="text-truncate">
                     ${escapeHtml([p.nrp_nip, p.pangkat, p.ur].filter(Boolean).join(' · '))}
                 </div>
             </div>
         `;
 
         item.addEventListener('click', function () {
-            if (exceptions.some(e => String(e.personel_id) === String(p.id) && !e.is_deleted)) {
-                return;
-            }
+            if (exceptions.some(e => String(e.personel_id) === String(p.id) && !e.is_deleted)) return;
 
             exceptions.push({
                 _uid: generateUid(),
@@ -1044,8 +989,9 @@ function renderDropdownList(query = '') {
             });
 
             document.getElementById('customDropdownMenu').classList.add('d-none');
-            document.getElementById('dropdownTrigger').style.borderColor = '#cbd5e1';
-            document.getElementById('triggerIcon').className = 'fas fa-chevron-down text-muted';
+            document.getElementById('dropdownTrigger').style.borderColor = '#94a3b8';
+            document.getElementById('triggerIcon').className = 'fas fa-chevron-down';
+            document.getElementById('triggerIcon').style.color = '#64748b';
 
             renderAll();
         });
@@ -1060,13 +1006,13 @@ function updateStatsText() {
     const availableCount = Math.max(0, allPersonel.length - activeCount);
 
     document.getElementById('textStats').innerHTML =
-        `${availableCount} personel tersedia · <strong class="text-danger">${deletedCount} ditandai hapus</strong>`;
+        `${availableCount} personel tersedia · <strong class="text-danger" style="font-weight:700;">${deletedCount} ditandai hapus</strong>`;
 }
 
 function renderAll() {
     renderChips();
     renderSummary();
-    renderTable();
+    renderTable(); // Filter data terbaru setiap kali ada perubahan
     updateStatsText();
 
     const input = document.getElementById('innerSearchInput');
@@ -1079,7 +1025,7 @@ function renderChips() {
     container.innerHTML = '';
 
     if (!exceptions.length) {
-        container.innerHTML = '<div class="text-muted small">Belum ada personel yang ditandai.</div>';
+        container.innerHTML = '<div style="color:#64748b;font-weight:600;font-size:0.85rem;">Belum ada personel yang ditandai.</div>';
         return;
     }
 
@@ -1094,19 +1040,21 @@ function renderChips() {
         group.className = 'mb-4';
 
         group.innerHTML = `
-            <div class="fw-bold mb-3 d-flex align-items-center" style="color:#475569;font-size:13px">
-                <span style="width:8px;height:8px;border-radius:50%; background:#f97316;display:inline-block;margin-right:8px"></span>
+            <div class="mb-3 d-flex align-items-center" style="color:#000000;font-size:14px;font-weight:800;letter-spacing:0.3px;text-transform:uppercase;">
+                <span style="width:10px;height:10px;border-radius:50%; background:#f97316;display:inline-block;margin-right:10px"></span>
                 ${escapeHtml(status)} (${initials(status)})
-                <span style="background:#e2e8f0;color:#334155;padding:2px 8px; border-radius:12px;font-size:11px;margin-left:8px">
+                <span style="background:#e2e8f0;color:#000000;padding:2px 10px; border-radius:12px;font-size:12px;margin-left:10px;font-weight:800;">
                     ${grouped[status].length}
                 </span>
             </div>
+            <div class="cards-grid"></div>
         `;
+
+        const grid = group.querySelector('.cards-grid');
 
         grouped[status].forEach(item => {
             const marked = item.is_deleted === true;
             const card = document.createElement('div');
-
             card.className = 'chip-personel' + (marked ? ' marked-delete' : '');
 
             let displayName = item.nama || '';
@@ -1115,49 +1063,42 @@ function renderChips() {
             }
 
             card.innerHTML = `
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="d-flex align-items-center" style="gap:14px;min-width:0">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="d-flex align-items-center" style="gap:10px;min-width:0">
                         <div class="avatar-circle" style="${marked ? 'opacity:.5' : ''}">
                             ${escapeHtml((item.nama || '?').charAt(0).toUpperCase())}
                         </div>
-                        <div style="line-height:1.4;min-width:0">
-                            <div class="fw-bold nama-personel">
-                                ${escapeHtml(displayName)}
-                            </div>
-                            <div class="detail-personel">
-                                ${escapeHtml(item.nrp)}
-                                <span style="margin:0 4px">·</span>
-                                ${escapeHtml(item.divisi)}
+                        <div style="min-width:0">
+                            <div class="nama-personel text-truncate" title="${escapeHtml(displayName)}">${escapeHtml(displayName)}</div>
+                            <div class="detail-personel text-truncate" title="${escapeHtml(item.nrp)} · ${escapeHtml(item.divisi)}">
+                                ${escapeHtml(item.nrp)} <span style="margin:0 4px">·</span> ${escapeHtml(item.divisi)}
                             </div>
                         </div>
                     </div>
 
                     <span class="btn-toggle-hapus ${marked ? 'undo' : ''}"
                         data-uid="${escapeHtml(item._uid)}"
-                        title="${marked ? 'Batal tandai hapus' : 'Tandai hapus'}"
-                        aria-label="${marked ? 'Batal tandai hapus' : 'Tandai hapus'}">
+                        title="${marked ? 'Batal tandai hapus' : 'Tandai hapus'}">
                         ${marked ? '<i class="fas fa-undo"></i>' : '&times;'}
                     </span>
                 </div>
 
-                <input type="text" class="form-control input-keterangan"
-                    data-uid="${escapeHtml(item._uid)}"
-                    placeholder="Keterangan ${escapeHtml(status.toLowerCase())}..."
-                    value="${escapeHtml(item.keterangan || '')}"
-                    ${marked ? 'disabled' : ''}>
+                <div class="mt-auto">
+                    <input type="text" class="form-control input-keterangan"
+                        data-uid="${escapeHtml(item._uid)}"
+                        placeholder="Keterangan ${escapeHtml(status.toLowerCase())}..."
+                        value="${escapeHtml(item.keterangan || '')}"
+                        ${marked ? 'disabled' : ''}>
+                </div>
             `;
-
-            group.appendChild(card);
+            grid.appendChild(card);
         });
-
         container.appendChild(group);
     });
 }
 
-/* Render Ringkasan Widget Bergaya Dashboard Utama */
 function renderSummary() {
     const container = document.getElementById('summaryContainer');
-
     const counts = {
         'Hadir': 0, 'Izin': 0, 'Sakit': 0, 'Dinas Luar': 0, 'Alfa': 0,
         'Lepas Dinas': 0, 'Cuti': 0, 'Terlambat': 0, 'Pendidikan': 0, 'BKO': 0
@@ -1166,49 +1107,40 @@ function renderSummary() {
     const active = exceptions.filter(e => !e.is_deleted);
     counts.Hadir = Math.max(0, allPersonel.length - active.length);
 
-    active.forEach(e => {
-        counts[e.status] = (counts[e.status] || 0) + 1;
-    });
+    active.forEach(e => { counts[e.status] = (counts[e.status] || 0) + 1; });
 
     const items = [
-        ['Hadir', 'HADIR (H)', '#10b981'],
-        ['Izin', 'IZIN (I)', '#eab308'],
-        ['Sakit', 'SAKIT (S)', '#f97316'],
-        ['Dinas Luar', 'DINAS LUAR (DL)', '#0ea5e9'],
-        ['Alfa', 'ALFA (A)', '#ef4444'],
-        ['Lepas Dinas', 'LEPAS DINAS (LD)', '#8b5cf6'],
-        ['Cuti', 'CUTI (C)', '#ec4899'],
-        ['Terlambat', 'TERLAMBAT (TL)', '#64748b'],
-        ['Pendidikan', 'PENDIDIKAN (DIK)', '#14b8a6'],
-        ['BKO', 'BKO', '#3b82f6']
+        ['Hadir', 'HADIR (H)', '#10b981'], ['Izin', 'IZIN (I)', '#eab308'],
+        ['Sakit', 'SAKIT (S)', '#f97316'], ['Dinas Luar', 'DINAS LUAR (DL)', '#0ea5e9'],
+        ['Alfa', 'ALFA (A)', '#ef4444'], ['Lepas Dinas', 'LEPAS DINAS (LD)', '#8b5cf6'],
+        ['Cuti', 'CUTI (C)', '#ec4899'], ['Terlambat', 'TERLAMBAT (TL)', '#64748b'],
+        ['Pendidikan', 'PENDIDIKAN (DIK)', '#14b8a6'], ['BKO', 'BKO', '#3b82f6']
     ];
 
     container.innerHTML = `
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: 100%;">
             ${items.map(([key, label, color]) => `
-                <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 8px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80px;">
-                    <div style="font-weight: 800; font-size: 20px; color: ${color}; margin-bottom: 4px; line-height: 1;">${counts[key] || 0}</div>
-                    <div style="font-size: 10.5px; color: #64748b; font-weight: 700; letter-spacing: 0.2px; line-height: 1.2;">${label}</div>
+                <div style="background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 14px; padding: 14px 8px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80px;">
+                    <div style="font-weight: 800; font-size: 22px; color: ${color}; margin-bottom: 4px; line-height: 1;">${counts[key] || 0}</div>
+                    <div style="font-size: 11px; color: #000000; font-weight: 800; letter-spacing: 0.3px; line-height: 1.2;">${label}</div>
                 </div>
             `).join('')}
         </div>
     `;
 }
 
+/* Fungsi Memfilter Data Sebelum Paginasi (Baru Ditambahkan) */
 function renderTable() {
-    const tbody = document.getElementById('tableAbsenBody');
-    tbody.innerHTML = '';
-
     const query = document.getElementById('tableSearch').value.toLowerCase().trim();
     const filter = document.getElementById('tableFilterStatus').value;
-
     const activeMap = {};
 
     exceptions.forEach(e => {
         if (!e.is_deleted) activeMap[String(e.personel_id)] = e;
     });
 
-    let number = 1;
+    // Reset dan isi ulang array filter
+    currentFilteredData = [];
 
     allPersonel.forEach(p => {
         const exception = activeMap[String(p.id)];
@@ -1220,11 +1152,43 @@ function renderTable() {
         const nama = String(p.nama || '');
         const nrp = String(p.nrp_nip || '');
 
-        if (query && !nama.toLowerCase().includes(query) &&
-            !nrp.toLowerCase().includes(query)) return;
+        if (query && !nama.toLowerCase().includes(query) && !nrp.toLowerCase().includes(query)) return;
+
+        // Push data yang lolos filter ke array paginasi
+        currentFilteredData.push({ p, status, keterangan });
+    });
+
+    // Pastikan current page tetap valid jika data menyusut akibat filter
+    const totalPages = Math.ceil(currentFilteredData.length / rowsPerPage);
+    if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+    if (currentPage === 0 && totalPages > 0) currentPage = 1;
+
+    displayTablePage();
+}
+
+/* Fungsi Menampilkan Paginasi Berdasarkan Array (Baru Ditambahkan) */
+function displayTablePage() {
+    const tbody = document.getElementById('tableAbsenBody');
+    tbody.innerHTML = '';
+
+    if (currentFilteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted fw-bold"><i class="fas fa-search mb-2 d-block fs-3"></i>Data tidak ditemukan.</td></tr>';
+        renderPaginationControls();
+        return;
+    }
+
+    const startIdx = (currentPage - 1) * rowsPerPage;
+    const endIdx = startIdx + rowsPerPage;
+    const pageData = currentFilteredData.slice(startIdx, endIdx);
+
+    let number = startIdx + 1; // Agar nomor urut berlanjut sesuai halamannya
+
+    pageData.forEach(item => {
+        const { p, status, keterangan } = item;
+        const nama = String(p.nama || '');
+        const nrp = String(p.nrp_nip || '');
 
         let badge = 'badge-hadir';
-
         if (status === 'Sakit') badge = 'badge-sakit';
         else if (status === 'Dinas Luar') badge = 'badge-primary';
         else if (status === 'Izin') badge = 'badge-izin';
@@ -1232,26 +1196,71 @@ function renderTable() {
         else if (status !== 'Hadir') badge = 'badge-other';
 
         const tr = document.createElement('tr');
-
-        
-tr.innerHTML = `
-    <td><span class="no-badge">${number}</span></td>
-
-    <td>
-        <span class="fw-bold text-dark">${escapeHtml(nama)}</span>
-    </td>
-
-    <td class="text-muted small">${escapeHtml(p.pangkat || '—')}</td>
-    <td class="fw-bold" style="color:#64748b">${escapeHtml(nrp || '—')}</td>
-    <td><span class="badge bg-light text-secondary border" style="border-radius: 6px; font-weight: 500;">${escapeHtml(p.subbid || '—')}</span></td>
-    <td><span class="badge bg-light text-secondary border" style="border-radius: 6px; font-weight: 500;">${escapeHtml(p.ur || '—')}</span></td>
-    <td><span class="badge-status ${badge}">● ${escapeHtml(status)}</span></td>
-    <td class="text-muted small">${escapeHtml(keterangan)}</td>
-`;
-
+        tr.innerHTML = `
+            <td class="text-center"><span class="no-badge">${number}</span></td>
+            <td><span style="color:#000000; font-weight:600; font-size:0.95rem;">${escapeHtml(nama)}</span></td>
+            <td style="color:#475569; font-weight:500;">${escapeHtml(p.pangkat || '—')}</td>
+            <td style="color:#475569; font-weight:600;">${escapeHtml(nrp || '—')}</td>
+            <td><span class="badge bg-light text-dark border" style="border-radius: 6px; font-weight: 700;">${escapeHtml(p.subbid || '—')}</span></td>
+            <td><span class="badge bg-light text-dark border" style="border-radius: 6px; font-weight: 700;">${escapeHtml(p.ur || '—')}</span></td>
+            <td><span class="badge-status ${badge}">● ${escapeHtml(status)}</span></td>
+            <td style="color:#475569; font-weight:500;">${escapeHtml(keterangan)}</td>
+        `;
         tbody.appendChild(tr);
         number++;
     });
+
+    renderPaginationControls();
+}
+
+/* Fungsi Render Tombol Paginasi (Baru Ditambahkan) */
+function renderPaginationControls() {
+    const paginationInfo = document.getElementById('paginationInfo');
+    const paginationButtons = document.getElementById('paginationButtons');
+    
+    const totalRows = currentFilteredData.length;
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+    
+    if (totalRows === 0) {
+        paginationInfo.innerHTML = 'Menampilkan 0 data';
+        paginationButtons.innerHTML = '';
+        return;
+    }
+
+    const startRange = ((currentPage - 1) * rowsPerPage) + 1;
+    const endRange = Math.min(currentPage * rowsPerPage, totalRows);
+    
+    paginationInfo.innerHTML = `Menampilkan <span style="color:#000;">${startRange} - ${endRange}</span> dari <span style="color:#000;">${totalRows}</span> data`;
+    paginationButtons.innerHTML = '';
+    
+    if (totalPages > 1) {
+        // Tombol Sebelumnya
+        const prevBtn = document.createElement('button');
+        prevBtn.className = `page-btn-custom ${currentPage === 1 ? 'disabled' : ''}`;
+        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        prevBtn.onclick = () => { if(currentPage > 1) { currentPage--; displayTablePage(); } };
+        paginationButtons.appendChild(prevBtn);
+
+        // Deret Angka Paginasi (dibatasi max 5 kotak agar rapi)
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        if (endPage - startPage < 4) { startPage = Math.max(1, endPage - 4); }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement('button');
+            btn.className = `page-btn-custom ${i === currentPage ? 'active' : ''}`;
+            btn.innerText = i;
+            btn.onclick = () => { currentPage = i; displayTablePage(); };
+            paginationButtons.appendChild(btn);
+        }
+
+        // Tombol Selanjutnya
+        const nextBtn = document.createElement('button');
+        nextBtn.className = `page-btn-custom ${currentPage === totalPages ? 'disabled' : ''}`;
+        nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        nextBtn.onclick = () => { if(currentPage < totalPages) { currentPage++; displayTablePage(); } };
+        paginationButtons.appendChild(nextBtn);
+    }
 }
 </script>
 

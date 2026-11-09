@@ -11,6 +11,7 @@ $routes->setDefaultController('Home');
 $routes->setDefaultMethod('index');
 $routes->setTranslateURIDashes(false);
 $routes->set404Override();
+$routes->get('admin/data-personel/export', 'Admin\DataPersonel::export');
 
 service('auth')->routes($routes);
 
