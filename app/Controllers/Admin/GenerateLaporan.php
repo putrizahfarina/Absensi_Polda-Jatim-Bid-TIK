@@ -56,60 +56,80 @@ class GenerateLaporan extends BaseController
     // GENERATE LAPORAN
     // ========================================================
 
-    public function generateLaporan()
-    {
-        $tanggal = trim(
-            (string) ($this->request->getPost('tanggal') ?? '')
-        );
-
-        $type = strtolower(
-            trim((string) ($this->request->getPost('type') ?? 'pdf'))
-        );
-
-        $periode = strtolower(
-            trim((string) ($this->request->getPost('periode') ?? 'harian'))
-        );
-
-        if (!$this->tanggalValid($tanggal)) {
-            return redirect()
-                ->to('/admin/laporan')
-                ->with('msg', 'Tanggal laporan tidak valid.');
-        }
+ 
+public function generateLaporan()
+{
+    try {
+        $type = strtolower(trim((string) ($this->request->getPost('type') ?? 'pdf')));
+        $periode = strtolower(trim((string) ($this->request->getPost('periode') ?? 'harian')));
 
         if (!in_array($type, ['pdf', 'doc', 'docx'], true)) {
-            return redirect()
-                ->to('/admin/laporan')
-                ->with('msg', 'Format laporan tidak dikenali.');
+            return redirect()->to('/admin/laporan')
+                ->with('msg', 'Format laporan tidak dikenali. Silakan pilih Generate PDF atau Generate DOC.');
         }
 
         if (!in_array($periode, ['harian', 'mingguan', 'bulanan'], true)) {
-            return redirect()
-                ->to('/admin/laporan')
+            return redirect()->to('/admin/laporan')
                 ->with('msg', 'Periode laporan tidak dikenali.');
         }
 
+        if ($periode === 'bulanan') {
+            $bulan = trim((string) ($this->request->getPost('bulan') ?? ''));
+            if (!$this->bulanValid($bulan)) {
+                return redirect()->to('/admin/laporan')
+                    ->with('msg', 'Bulan laporan tidak valid. Pilih bulan dan tahun.');
+            }
+            $tanggal = $bulan . '-01';
+        } else {
+            // Form mingguan menggunakan input tanggalMingguan.
+            $tanggalField = $periode === 'mingguan' ? 'tanggalMingguan' : 'tanggal';
+            $tanggal = trim((string) ($this->request->getPost($tanggalField) ?? ''));
+
+            // Kompatibilitas dengan form versi lama yang memakai field tanggal.
+            if ($tanggal === '' && $periode === 'mingguan') {
+                $tanggal = trim((string) ($this->request->getPost('tanggal') ?? ''));
+            }
+
+            if (!$this->tanggalValid($tanggal)) {
+                return redirect()->to('/admin/laporan')
+                    ->with('msg', 'Tanggal laporan tidak valid. Silakan pilih tanggal.');
+            }
+        }
+
         if ($periode === 'mingguan' || $periode === 'bulanan') {
-            return $this->generateLaporanPeriode(
-                $tanggal,
-                $periode,
-                $type
-            );
+            return $this->generateLaporanPeriode($tanggal, $periode, $type);
         }
 
         return $this->generateLaporanHarian($tanggal, $type);
+    } catch (\Throwable $e) {
+        log_message(
+            'error',
+            'GenerateLaporan gagal: ' . $e->getMessage()
+            . ' | File: ' . $e->getFile()
+            . ' | Baris: ' . $e->getLine()
+            . "\n" . $e->getTraceAsString()
+        );
+
+        return redirect()->to('/admin/laporan')
+            ->with('msg', 'Laporan gagal dibuat. Periksa writable/logs untuk melihat detail kesalahan.');
     }
+}
 
-    // ========================================================
-    // VALIDASI TANGGAL
-    // ========================================================
+private function tanggalValid(string $tanggal): bool
+{
+    $date = \DateTime::createFromFormat('!Y-m-d', $tanggal);
 
-    private function tanggalValid(string $tanggal): bool
-    {
-        $date = \DateTime::createFromFormat('!Y-m-d', $tanggal);
+    return $date !== false
+        && $date->format('Y-m-d') === $tanggal;
+}
 
-        return $date !== false
-            && $date->format('Y-m-d') === $tanggal;
-    }
+private function bulanValid(string $bulan): bool
+{
+    $date = \DateTime::createFromFormat('!Y-m', $bulan);
+
+    return $date !== false
+        && $date->format('Y-m') === $bulan;
+}
 
     // ========================================================
     // NORMALISASI STATUS
@@ -128,6 +148,56 @@ class GenerateLaporan extends BaseController
         return $status;
     }
 
+
+    /**
+     * Pemetaan status ke kode rekap bulanan.
+     */
+    private function kodeStatusBulanan(string $status): string
+    {
+        $status = $this->normalisasiStatus($status);
+        $map = [
+            'HADIR' => 'H',
+            'DINAS LUAR' => 'D',
+            'DINAS' => 'D',
+            'LEPAS DINAS' => 'LD',
+            'CUTI' => 'C',
+            'IZIN' => 'I',
+            'SAKIT' => 'S',
+            'TERLAMBAT' => 'T',
+            'DIK' => 'DIK',
+            'PENDIDIKAN' => 'DIK',
+            'BKO' => 'BKO',
+        ];
+        return $map[$status] ?? ($status === '' ? '-' : $status);
+    }
+
+    private function hitungKodePerPersonel(array $statusHarian): array
+    {
+        $kode = ['H', 'D', 'LD', 'C', 'I', 'S', 'T', 'DIK', 'BKO'];
+        $hasil = array_fill_keys($kode, 0);
+        foreach ($statusHarian as $status) {
+            if (isset($hasil[$status])) {
+                $hasil[$status]++;
+            }
+        }
+        return $hasil;
+    }
+
+/**
+ * Menentukan status berdasarkan jam presensi.
+ * Batas masuk: pukul 07.00.
+ */
+private function cekKeterlambatan(array $absen): array
+{
+    $status = $this->normalisasiStatus(
+        (string) ($absen['status'] ?? '')
+    );
+
+    return [
+        'status' => $status,
+        'keterangan' => (string) ($absen['keterangan'] ?? '-'),
+    ];
+}
     // ========================================================
     // REKAP STATUS SELURUH PRESENSI
     // ========================================================
@@ -341,80 +411,81 @@ class GenerateLaporan extends BaseController
             ->findAll();
     }
 
-// ========================================================
-// LAPORAN HARIAN
-// ========================================================
+    // ========================================================
+    // LAPORAN HARIAN
+    // ========================================================
 
-private function generateLaporanHarian(
-    string $tanggal,
-    string $type
-) {
-    $personel = $this->ambilPersonel();
+    private function generateLaporanHarian(
+        string $tanggal,
+        string $type
+    ) {
+        $personel = $this->ambilPersonel();
 
-    if (empty($personel)) {
-        return redirect()
-            ->to('/admin/laporan')
-            ->with('msg', 'Data personel kosong.');
-    }
-
-    $presensi = $this->presensiModel
-        ->where('waktu_masuk >=', $tanggal . ' 00:00:00')
-        ->where('waktu_masuk <=', $tanggal . ' 23:59:59')
-        ->orderBy('waktu_masuk', 'ASC')
-        ->findAll();
-$rekapStatus = $this->hitungRekapStatus($presensi);
-
-    // Hitung rekap status dari data presensi
-    $rekapStatus = $this->hitungRekapStatus($presensi);
-
-    // Simpan catatan presensi terakhir setiap personel
-    $presensiByPersonel = [];
-
-    foreach ($presensi as $absen) {
-        $id = (string) ($absen['personel_id'] ?? '');
-
-        if ($id !== '') {
-            $presensiByPersonel[$id] = $absen;
+        if (empty($personel)) {
+            return redirect()
+                ->to('/admin/laporan')
+                ->with('msg', 'Data personel kosong.');
         }
+
+        $presensi = $this->presensiModel
+            ->where('waktu_masuk >=', $tanggal . ' 00:00:00')
+            ->where('waktu_masuk <=', $tanggal . ' 23:59:59')
+            ->orderBy('waktu_masuk', 'ASC')
+            ->findAll();
+
+        $rekapStatus = $this->hitungRekapStatus($presensi);
+
+        /*
+         * Jika terdapat beberapa catatan pada hari yang sama,
+         * data tabel harian memakai catatan presensi terakhir.
+         */
+        $presensiByPersonel = [];
+
+        foreach ($presensi as $absen) {
+            $id = (string) ($absen['personel_id'] ?? '');
+
+            if ($id !== '') {
+                $presensiByPersonel[$id] = $absen;
+            }
+        }
+
+        $dataAbsensi = [];
+
+        foreach ($personel as $p) {
+            $id = (string) ($p['id'] ?? '');
+            $absen = $presensiByPersonel[$id] ?? null;
+
+$hasilCek = $absen
+    ? $this->cekKeterlambatan($absen)
+    : ['status' => '', 'keterangan' => '-'];
+
+            $dataAbsensi[] = [
+                'personel_id' => $p['id'] ?? null,
+                'nrp_nip' => $p['nrp_nip'] ?? '-',
+                'nama' => $p['nama'] ?? '-',
+                'pangkat' => $p['pangkat'] ?? '-',
+                'subbid' => $p['subbid'] ?? '-',
+                'ur' => $p['ur'] ?? '-',
+                'jabatan' => $p['jabatan'] ?? '-',
+                'satker' => $p['satker'] ?? '-',
+                'jenis_kelamin' => $p['jenis_kelamin'] ?? '-',
+               'status' => $absen ? $hasilCek['status'] : null,
+              'waktu_masuk' => $absen['waktu_masuk'] ?? null,
+               'keterangan' => $absen ? $hasilCek['keterangan'] : '-',
+            ];
+        }
+
+        return $this->keluarkanLaporan(
+            $tanggal,
+            $tanggal,
+            'harian',
+            $type,
+            $dataAbsensi,
+            $presensi,
+            $rekapStatus
+        );
     }
 
-    // Siapkan data absensi seluruh personel
-    $dataAbsensi = [];
-
-    foreach ($personel as $p) {
-        $id = (string) ($p['id'] ?? '');
-        $absen = $presensiByPersonel[$id] ?? null;
-
-        $dataAbsensi[] = [
-            'personel_id' => $p['id'] ?? null,
-            'nrp_nip' => $p['nrp_nip'] ?? '-',
-            'nama' => $p['nama'] ?? '-',
-            'pangkat' => $p['pangkat'] ?? '-',
-            'subbid' => $p['subbid'] ?? '-',
-            'ur' => $p['ur'] ?? '-',
-            'jabatan' => $p['jabatan'] ?? '-',
-            'satker' => $p['satker'] ?? '-',
-            'jenis_kelamin' => $p['jenis_kelamin'] ?? '-',
-            'status' => $absen
-                ? $this->normalisasiStatus(
-                    (string) ($absen['status'] ?? '')
-                )
-                : null,
-            'waktu_masuk' => $absen['waktu_masuk'] ?? null,
-            'keterangan' => $absen['keterangan'] ?? '-',
-        ];
-    }
-
-   return $this->keluarkanLaporan(
-    $tanggal,
-    $tanggal,
-    'harian',
-    $type,
-    $dataAbsensi,
-    $presensi,
-    $this->hitungRekapStatus($presensi)
-);
-}
     // ========================================================
     // LAPORAN MINGGUAN DAN BULANAN
     // ========================================================
@@ -442,7 +513,7 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
             ->where('waktu_masuk <=', $tanggalAkhir . ' 23:59:59')
             ->orderBy('waktu_masuk', 'ASC')
             ->findAll();
-$rekapStatus = $this->hitungRekapStatus($presensi);
+
         /*
          * Rekap keseluruhan dihitung dari semua catatan presensi
          * pada periode yang dipilih.
@@ -461,6 +532,72 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
             $presensiByPersonel[$id][] = $absen;
         }
 
+        $tanggalGrid = [];
+        $tanggalCursor = new \DateTimeImmutable($tanggalMulai);
+        $tanggalBatas = new \DateTimeImmutable($tanggalAkhir);
+
+        // Grid periode: mingguan dan bulanan hanya menampilkan hari kerja
+        // Senin-Jumat. Untuk bulanan, tanggal dikelompokkan berdasarkan
+        // minggu kerja pertama sampai terakhir dalam bulan tersebut.
+        $tanggalAwalBulan = new \DateTimeImmutable($tanggalMulai);
+        $nomorHariAwalBulan = (int) $tanggalAwalBulan->format('N');
+        $tanggalHariKerjaPertama = $nomorHariAwalBulan <= 5
+            ? 1
+            : 1 + ((8 - $nomorHariAwalBulan) % 7);
+
+        while ($tanggalCursor <= $tanggalBatas) {
+            $nomorHariMinggu = (int) $tanggalCursor->format('N');
+            if (in_array($periode, ['mingguan', 'bulanan'], true) && $nomorHariMinggu <= 5) {
+                $hariDalamBulan = (int) $tanggalCursor->format('j');
+                // Nomor minggu dihitung berdasarkan minggu kerja dalam bulan
+                // yang bersangkutan, baik untuk laporan mingguan maupun bulanan.
+                $awalBulanKolom = $tanggalCursor->modify('first day of this month');
+                $nomorHariAwalKolom = (int) $awalBulanKolom->format('N');
+                $hariKerjaPertamaKolom = $nomorHariAwalKolom <= 5
+                    ? 1
+                    : 1 + ((8 - $nomorHariAwalKolom) % 7);
+                $nomorMingguKolom = (int) floor(
+                    ($hariDalamBulan - $hariKerjaPertamaKolom) / 7
+                ) + 1;
+
+                $tanggalGrid[] = [
+                    'tanggal' => $tanggalCursor->format('Y-m-d'),
+                    'hari' => $hariDalamBulan,
+                    'nama_hari' => [
+                        1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu',
+                        4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu',
+                    ][$nomorHariMinggu],
+                    'minggu' => $nomorMingguKolom,
+                ];
+            }
+            $tanggalCursor = $tanggalCursor->modify('+1 day');
+        }
+
+        $jumlahHariBulan = (int) $tanggalAwalBulan->format('t');
+        $tanggalBulanan = $periode === 'bulanan'
+            ? array_column($tanggalGrid, 'hari')
+            : [];
+        $statusHarianByPersonel = [];
+
+        if (in_array($periode, ['mingguan', 'bulanan'], true)) {
+            foreach ($presensi as $absen) {
+                $idPresensi = (string) ($absen['personel_id'] ?? '');
+                $waktuPresensi = (string) ($absen['waktu_masuk'] ?? '');
+                $timestampPresensi = $waktuPresensi !== '' ? strtotime($waktuPresensi) : false;
+                if ($idPresensi === '' || $timestampPresensi === false) {
+                    continue;
+                }
+
+                $hasilStatus = $this->cekKeterlambatan($absen);
+                $statusEfektif = (string) ($hasilStatus['status'] ?? ($absen['status'] ?? ''));
+                $hariPresensi = (int) date('j', $timestampPresensi);
+
+                // Catatan terakhir per tanggal menjadi status tanggal tersebut.
+                $statusHarianByPersonel[$idPresensi][$hariPresensi] =
+                    $this->kodeStatusBulanan($statusEfektif);
+            }
+        }
+
         $dataAbsensi = [];
 
         foreach ($personel as $p) {
@@ -473,13 +610,12 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
             // Daftar waktu presensi per personel.
             $waktuPeriode = [];
 
-            // Daftar keterangan unik.
+            // Daftar keterangan beserta tanggal presensi.
             $keteranganPeriode = [];
 
             foreach ($daftarPresensi as $absen) {
-                $status = $this->normalisasiStatus(
-                    (string) ($absen['status'] ?? '')
-                );
+    $hasilCek = $this->cekKeterlambatan($absen);
+    $status = $hasilCek['status'];
 
                 if ($status !== '') {
                     if (!isset($jumlahStatus[$status])) {
@@ -489,6 +625,7 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
                     $jumlahStatus[$status]++;
                 }
 
+                // Daftar waktu presensi.
                 $waktu = trim(
                     (string) ($absen['waktu_masuk'] ?? '')
                 );
@@ -498,21 +635,39 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
 
                     if ($timestamp !== false) {
                         $waktuPeriode[] =
-                            date('d/m', $timestamp)
+                            date('d/m/Y', $timestamp)
                             . ' '
                             . date('H:i', $timestamp);
                     }
                 }
 
+                // Keterangan otomatis disertai tanggal.
                 $keterangan = trim(
-                    (string) ($absen['keterangan'] ?? '')
-                );
+                (string) ($hasilCek['keterangan'] ?? '-')
+            );
 
                 if ($keterangan !== '' && $keterangan !== '-') {
-                    $keteranganPeriode[] = $keterangan;
+                    $tanggalKeterangan = '';
+
+                    if ($waktu !== '') {
+                        $timestamp = strtotime($waktu);
+
+                        if ($timestamp !== false) {
+                            $tanggalKeterangan = date(
+                                'd/m/Y',
+                                $timestamp
+                            );
+                        }
+                    }
+
+                    if ($tanggalKeterangan !== '') {
+                        $keteranganPeriode[] =
+                            $tanggalKeterangan . ': ' . $keterangan;
+                    } else {
+                        $keteranganPeriode[] = $keterangan;
+                    }
                 }
             }
-
             /*
              * Contoh hasil:
              * HADIR: 3
@@ -562,6 +717,20 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
                 'keterangan' => empty($keteranganPeriode)
                     ? '-'
                     : implode("\n", array_unique($keteranganPeriode)),
+                'status_harian' => in_array($periode, ['mingguan', 'bulanan'], true)
+                    ? array_replace(
+                        array_fill_keys(array_column($tanggalGrid, 'hari'), '-'),
+                        $statusHarianByPersonel[$id] ?? []
+                    )
+                    : [],
+                'rekap_kode' => in_array($periode, ['mingguan', 'bulanan'], true)
+                    ? $this->hitungKodePerPersonel(
+                        array_intersect_key(
+                            $statusHarianByPersonel[$id] ?? [],
+                            array_flip(array_column($tanggalGrid, 'hari'))
+                        )
+                    )
+                    : [],
             ];
         }
 
@@ -572,7 +741,8 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
             $type,
             $dataAbsensi,
             $presensi,
-            $rekapStatus
+            $rekapStatus,
+            $tanggalGrid
         );
     }
 
@@ -587,7 +757,8 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
         string $type,
         array $dataAbsensi,
         array $presensi,
-        array $rekapStatus
+        array $rekapStatus,
+        array $tanggalGrid = []
     ) {
         [$logoBidTikPath, $logoPoldaPath] = $this->ambilLogo();
 
@@ -602,6 +773,18 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
             $tanggalAkhir
         );
 
+        $poinApel = [];
+
+if ($periode === 'mingguan') {
+    $modelDeskripsi = new DeskripsiKegiatanModel();
+
+    $poinApel = $modelDeskripsi
+        ->where('tanggal >=', $tanggalMulai)
+        ->where('tanggal <=', $tanggalAkhir)
+        ->orderBy('tanggal', 'ASC')
+        ->findAll();
+}
+
         $data = [
             'title' => 'Laporan Kehadiran Personel',
             'tanggal' => $tanggalMulai,
@@ -610,11 +793,15 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
             'tanggalMulai' => $tanggalMulai,
             'tanggalAkhir' => $tanggalAkhir,
             'periode' => $periode,
+            'tanggalBulanan' => $periode === 'bulanan'
+                ? array_column($tanggalGrid, 'hari')
+                : [],
+            'tanggalGrid' => $tanggalGrid,
             'personel' => $this->ambilPersonel(),
             'dataAbsensi' => $dataAbsensi,
             'statusAbsensi' => $this->statusAbsensi,
             'rekapStatus' => $rekapStatus,
-            'poinApel' => '',
+            'poinApel' => $poinApel,
             'deskripsiKegiatan' => $deskripsiKegiatan,
             'logoBidTik' => '',
             'logoPolda' => '',
@@ -630,7 +817,10 @@ $rekapStatus = $this->hitungRekapStatus($presensi);
                 $rekapStatus,
                 $logoBidTikPath,
                 $logoPoldaPath,
-                $deskripsiKegiatan
+                $deskripsiKegiatan,
+                $tanggalMulai,
+                $tanggalAkhir,
+                $tanggalGrid
             );
         }
 
@@ -672,7 +862,10 @@ private function generateWordDocument(
     array $rekapStatus,
     ?string $logoBidTikPath,
     ?string $logoPoldaPath,
-    string $deskripsiKegiatan = ''
+    string $deskripsiKegiatan = '',
+    string $tanggalMulai = '',
+    string $tanggalAkhir = '',
+    array $tanggalGrid = []
 ) {
     $phpWord = new PhpWord();
     $phpWord->setDefaultFontName('Times New Roman');
@@ -681,9 +874,11 @@ private function generateWordDocument(
     // ==================================================
     // PENGATURAN HALAMAN
     // ==================================================
+    $isBulanan = strtolower($periode) === 'bulanan';
     $section = $phpWord->addSection([
-        'pageSizeW'    => 11906,
-        'pageSizeH'    => 16838,
+        'orientation'  => $isBulanan ? 'landscape' : 'portrait',
+        'pageSizeW'    => $isBulanan ? 16838 : 11906,
+        'pageSizeH'    => $isBulanan ? 11906 : 16838,
         'marginTop'    => 850,
         'marginBottom' => 680,
         'marginLeft'   => 453,
@@ -824,7 +1019,7 @@ private function generateWordDocument(
 
     // Garis pemisah kop
     $section->addText(
-        str_repeat('_', 105),
+        str_repeat('_', 145),
         [
             'name' => 'Times New Roman',
             'size' => 7,
@@ -909,6 +1104,211 @@ $section->addText(
         );
     };
 
+    if ($isBulanan || $isMingguan) {
+        $buatJudulBagian($isMingguan
+            ? 'A. REKAPITULASI KEHADIRAN MINGGUAN'
+            : 'A. REKAPITULASI KEHADIRAN BULANAN');
+        $kolomTanggalWord = $tanggalGrid;
+        $jumlahHariWord = count($kolomTanggalWord);
+
+        // Lebar tabel dibuat pas dengan area cetak halaman.
+        $lebarTabelGridWord = $isMingguan ? 11000 : 15000;
+        $lebarNoGridWord = $isMingguan ? 450 : 350;
+        $lebarNamaGridWord = $isMingguan ? 2350 : 1800;
+        $lebarNrpGridWord = $isMingguan ? 1450 : 900;
+        // Tabel A tidak menggunakan kolom TOTAL, termasuk pada rekap mingguan.
+        $lebarTotalGridWord = 0;
+        $lebarTanggalWord = $jumlahHariWord > 0
+            ? (int) floor(($lebarTabelGridWord - $lebarNoGridWord - $lebarNamaGridWord - $lebarNrpGridWord - $lebarTotalGridWord) / $jumlahHariWord)
+            : 0;
+
+        // Satu tabel utama untuk header minggu, tanggal, dan isi absensi.
+        // Header minggu digabung secara horizontal di atas kolom tanggal,
+        // sedangkan NO, NAMA/PANGKAT, dan NRP/NIP menyatu vertikal.
+        $tabel = $section->addTable([
+            'borderSize' => 5,
+            'borderColor' => $abu,
+            'cellMargin' => 45,
+            'layout' => 'fixed',
+            'width' => $lebarTabelGridWord,
+        ]);
+
+        if ($isBulanan || $isMingguan) {
+            // Kelompokkan tanggal berdasarkan nomor minggu kalender.
+            // Untuk laporan bulanan akan terbentuk beberapa kelompok,
+            // sedangkan laporan mingguan menampilkan satu kelompok
+            // dengan nomor minggu yang sesuai posisi tanggal dalam bulan.
+            $kelompokMingguWord = [];
+            foreach ($kolomTanggalWord as $kolomTanggal) {
+                $nomorMingguWord = max(1, (int) ($kolomTanggal['minggu'] ?? 1));
+                $indeksTerakhir = count($kelompokMingguWord) - 1;
+
+                if (
+                    $indeksTerakhir < 0
+                    || $kelompokMingguWord[$indeksTerakhir]['nomor'] !== $nomorMingguWord
+                ) {
+                    $kelompokMingguWord[] = [
+                        'nomor' => $nomorMingguWord,
+                        'jumlah' => 1,
+                    ];
+                } else {
+                    $kelompokMingguWord[$indeksTerakhir]['jumlah']++;
+                }
+            }
+
+            // Baris header pertama: identitas + kelompok minggu.
+            $tabel->addRow(360, ['cantSplit' => true]);
+            $opsiIdentitasAtas = [
+                'bgColor' => $merah,
+                'valign' => VerticalJc::CENTER,
+                'vMerge' => 'restart',
+            ];
+
+            $tabel->addCell($lebarNoGridWord, $opsiIdentitasAtas)
+                ->addText('NO', ['name' => 'Times New Roman', 'size' => 7, 'bold' => true, 'color' => $putih], $paragrafTengah);
+            $tabel->addCell($lebarNamaGridWord, $opsiIdentitasAtas)
+                ->addText('NAMA / PANGKAT', ['name' => 'Times New Roman', 'size' => 7, 'bold' => true, 'color' => $putih], $paragrafTengah);
+            $tabel->addCell($lebarNrpGridWord, $opsiIdentitasAtas)
+                ->addText('NRP/NIP', ['name' => 'Times New Roman', 'size' => 7, 'bold' => true, 'color' => $putih], $paragrafTengah);
+
+            foreach ($kelompokMingguWord as $kelompok) {
+                $jumlahKolomMingguWord = (int) $kelompok['jumlah'];
+                $tabel->addCell(
+                    $lebarTanggalWord * $jumlahKolomMingguWord,
+                    [
+                        'bgColor' => $merah,
+                        'valign' => VerticalJc::CENTER,
+                        'gridSpan' => $jumlahKolomMingguWord,
+                    ]
+                )->addText(
+                    'MINGGU KE-' . (int) $kelompok['nomor'],
+                    ['name' => 'Times New Roman', 'size' => 7, 'bold' => true, 'color' => $putih],
+                    $paragrafTengah
+                );
+            }
+
+            // Baris header kedua: tanggal dan hari. Tetap di tabel yang sama.
+            $tabel->addRow(390, ['cantSplit' => true]);
+            $opsiIdentitasBawah = [
+                'bgColor' => $merah,
+                'valign' => VerticalJc::CENTER,
+                'vMerge' => 'continue',
+            ];
+            $tabel->addCell($lebarNoGridWord, $opsiIdentitasBawah);
+            $tabel->addCell($lebarNamaGridWord, $opsiIdentitasBawah);
+            $tabel->addCell($lebarNrpGridWord, $opsiIdentitasBawah);
+        }
+
+        // Header tanggal menampilkan tanggal dan nama hari.
+        foreach ($kolomTanggalWord as $kolomTanggal) {
+            $labelTanggal = (string) ($kolomTanggal['hari'] ?? '')
+                . ' (' . (string) ($kolomTanggal['nama_hari'] ?? '') . ')';
+            $tabel->addCell($lebarTanggalWord, ['bgColor' => $merah, 'valign' => VerticalJc::CENTER])
+                ->addText($labelTanggal, ['name' => 'Times New Roman', 'size' => $isMingguan ? 7 : 6, 'bold' => true, 'color' => $putih], $paragrafTengah);
+        }
+
+        foreach ($dataAbsensi as $i => $row) {
+            $tabel->addRow(330, ['cantSplit' => true]);
+            $tabel->addCell($lebarNoGridWord)->addText((string) ($i + 1), ['name' => 'Times New Roman', 'size' => 7], $paragrafTengah);
+            $tabel->addCell($lebarNamaGridWord)->addText(
+                trim((string) ($row['pangkat'] ?? '') . ' ' . (string) ($row['nama'] ?? '-')),
+                ['name' => 'Times New Roman', 'size' => 7],
+                $paragrafKiri
+            );
+            $tabel->addCell($lebarNrpGridWord)->addText((string) ($row['nrp_nip'] ?? '-'), ['name' => 'Times New Roman', 'size' => 6], $paragrafTengah);
+            foreach ($kolomTanggalWord as $kolomTanggal) {
+                $hari = (int) $kolomTanggal['hari'];
+                $statusHari = strtoupper(trim((string) ($row['status_harian'][$hari] ?? '-')));
+                $tabel->addCell($lebarTanggalWord)->addText(
+                    (string) ($row['status_harian'][$hari] ?? '-'),
+                    ['name' => 'Times New Roman', 'size' => 7],
+                    $paragrafTengah
+                );
+            }
+        }
+
+        $buatJudulBagian('B. TOTAL PRESENSI PER PERSONEL');
+        $kodeBulananWord = ['H', 'D', 'LD', 'C', 'I', 'S', 'T', 'DIK', 'BKO'];
+        // Lebar tabel dan kolom disesuaikan dengan orientasi halaman.
+        // Total lebar mingguan = 11.000 twips; bulanan = 15.000 twips.
+        // Tabel rekap dibuat sedikit lebih ramping, dengan kolom nama lebih lega.
+        // Total lebar mingguan = 10.400 twips; bulanan = 14.200 twips.
+        // Samakan lebar kiri-kanan tabel rekap dengan tabel A di atasnya.
+        $lebarTabelRekapWord = $isMingguan ? 11000 : 15000;
+        $lebarNoWord = $isMingguan ? 400 : 450;
+
+        // Kolom nama tetap lebar; sisa ruang dibagi rata ke 9 kolom angka.
+        $lebarNamaWord = $isMingguan ? 3100 : 3600;
+        $lebarTotalHadirWord = $isMingguan ? 750 : 850;
+        $sisaLebarKodeWord = $lebarTabelRekapWord - $lebarNoWord - $lebarNamaWord - $lebarTotalHadirWord;
+        $lebarKodeDasarWord = (int) floor($sisaLebarKodeWord / count($kodeBulananWord));
+        $sisaKodeWord = $sisaLebarKodeWord % count($kodeBulananWord);
+        $lebarKodeWord = [];
+
+        foreach ($kodeBulananWord as $indexKode => $kode) {
+            $lebarKodeWord[$kode] = $lebarKodeDasarWord
+                + ($indexKode < $sisaKodeWord ? 1 : 0);
+        }
+
+        $rekapWord = $section->addTable([
+            'borderSize' => 4,
+            'borderColor' => $abu,
+            'cellMargin' => 35,
+            'layout' => 'fixed',
+            'width' => $lebarTabelRekapWord,
+        ]);
+        $rekapWord->addRow();
+        $rekapWord->addCell($lebarNoWord, ['bgColor' => $merah, 'valign' => VerticalJc::CENTER])
+            ->addText('NO', ['name' => 'Times New Roman', 'size' => 7, 'bold' => true, 'color' => $putih], $paragrafTengah);
+        $rekapWord->addCell($lebarNamaWord, ['bgColor' => $merah, 'valign' => VerticalJc::CENTER])
+            ->addText('NAMA', ['name' => 'Times New Roman', 'size' => 7, 'bold' => true, 'color' => $putih], $paragrafTengah);
+        foreach ($kodeBulananWord as $judul) {
+            $rekapWord->addCell($lebarKodeWord[$judul], ['bgColor' => $merah, 'valign' => VerticalJc::CENTER])
+                ->addText($judul, ['name' => 'Times New Roman', 'size' => 7, 'bold' => true, 'color' => $putih], $paragrafTengah);
+        }
+        $rekapWord->addCell($lebarTotalHadirWord, ['bgColor' => $merah, 'valign' => VerticalJc::CENTER])
+            ->addText('TOTAL HADIR', ['name' => 'Times New Roman', 'size' => 7, 'bold' => true, 'color' => $putih], $paragrafTengah);
+
+        $totalKodeWord = array_fill_keys($kodeBulananWord, 0);
+        $totalHadirWord = 0;
+        foreach ($dataAbsensi as $i => $row) {
+            $rekapWord->addRow();
+            $rekapWord->addCell($lebarNoWord)->addText((string) ($i + 1), $isiTabel, $paragrafTengah);
+            $rekapWord->addCell($lebarNamaWord)->addText(
+                trim((string) ($row['pangkat'] ?? '') . ' ' . (string) ($row['nama'] ?? '-')),
+                $isiTabel,
+                $paragrafKiri
+            );
+            foreach ($kodeBulananWord as $kode) {
+                $jumlahKode = (int) ($row['rekap_kode'][$kode] ?? 0);
+                $totalKodeWord[$kode] += $jumlahKode;
+                $rekapWord->addCell($lebarKodeWord[$kode])->addText((string) $jumlahKode, $isiTabel, $paragrafTengah);
+            }
+            $jumlahHadirPersonel = (int) ($row['rekap_kode']['H'] ?? 0);
+            $totalHadirWord += $jumlahHadirPersonel;
+            $rekapWord->addCell($lebarTotalHadirWord)->addText((string) $jumlahHadirPersonel, $tebal, $paragrafTengah);
+        }
+
+        $rekapWord->addRow();
+        // Hindari gridSpan pada baris total agar struktur DOCX tetap valid.
+        $rekapWord->addCell($lebarNoWord, ['bgColor' => 'F3F4F6'])
+            ->addText('', $tebal, $paragrafTengah);
+        $rekapWord->addCell($lebarNamaWord, ['bgColor' => 'F3F4F6'])
+            ->addText('TOTAL SELURUH PERSONEL', $tebal, $paragrafTengah);
+        foreach ($kodeBulananWord as $kode) {
+            $rekapWord->addCell($lebarKodeWord[$kode], ['bgColor' => 'F3F4F6'])
+                ->addText((string) $totalKodeWord[$kode], $tebal, $paragrafTengah);
+        }
+        $rekapWord->addCell($lebarTotalHadirWord, ['bgColor' => 'F3F4F6'])
+            ->addText((string) $totalHadirWord, $tebal, $paragrafTengah);
+
+        $buatJudulBagian('KETERANGAN KODE');
+        $section->addText(
+            'H = Hadir; D = Dinas; LD = Lepas Dinas; C = Cuti; I = Izin; S = Sakit; T = Terlambat; DIK = Pendidikan; BKO = Bawah Kendali Operasi.',
+            $normal,
+            $paragrafKiri
+        );
+    } else {
     // ==================================================
     // 1. DATA KEHADIRAN PERSONEL
     // Tabel pertama
@@ -924,17 +1324,20 @@ $section->addText(
         'width' => 11000,
     ]);
 
-    // Total lebar kolom = 11000 twips
+    // Khusus laporan harian A4 portrait. Total tepat 11.000 twips.
+    // Lebar kolom disesuaikan agar header dan isi lebih proporsional.
+    // Urutan kolom harian: WAKTU tepat di sebelah kanan KETERANGAN.
+    // Total lebar tetap 11.000 twips agar tata letak halaman tidak berubah.
     $kolom = [
-        ['NO', 440],
-        ['NAMA', 2090],
-        ['PANGKAT', 1320],
-        ['NRP/NIP', 1320],
-        ['SUBBID', 1210],
-        ['UR', 1100],
-        ['STATUS', 1210],
-        ['KETERANGAN', 1210],
-        ['WAKTU', 1100],
+        ['NO', 350],
+        ['NAMA', 1700],
+        ['PANGKAT', 1250],
+        ['NRP/NIP', 1000],
+        ['SUBBID', 1900],
+        ['UR', 900],
+        ['STATUS', 1050],
+        ['KETERANGAN', 1900],
+        ['WAKTU', 950],
     ];
 
     // Header tabel
@@ -946,7 +1349,7 @@ $section->addText(
             'valign' => VerticalJc::CENTER,
         ])->addText(
             $namaKolom,
-            $headerTabel,
+            array_merge($headerTabel, ['size' => 6.5]),
             $paragrafTengah
         );
     }
@@ -965,9 +1368,9 @@ $section->addText(
                 $timestamp = strtotime($waktuRaw);
 
                 $waktuTampil = $timestamp !== false
-                    ? date('H:i', $timestamp)
-                    : $waktuRaw;
-            }
+                ? date('d/m/Y H:i', $timestamp)
+                : $waktuRaw;
+                        }
         }
 
         $statusTampil = trim((string) ($row['status'] ?? ''));
@@ -999,8 +1402,8 @@ $section->addText(
                 'valign' => VerticalJc::CENTER,
             ])->addText(
                 $nilaiKolom[$index],
-                $isiTabel,
-                in_array($index, [0, 6, 8], true)
+                array_merge($isiTabel, ['size' => 7]),
+                in_array($index, [0, 6], true)
                     ? $paragrafTengah
                     : $paragrafKiri
             );
@@ -1009,19 +1412,23 @@ $section->addText(
 
     if (empty($dataAbsensi)) {
         $tabel->addRow();
-
-        $tabel->addCell(11000, [
-            'gridSpan' => 9,
-            'valign' => VerticalJc::CENTER,
-        ])->addText(
-            'Tidak terdapat data kehadiran.',
-            $isiTabel,
-            $paragrafTengah
-        );
+        foreach ($kolom as $index => [$namaKolom, $lebar]) {
+            $tabel->addCell($lebar, [
+                'valign' => VerticalJc::CENTER,
+            ])->addText(
+                $index === 0 ? 'Tidak terdapat data kehadiran.' : '',
+                array_merge($isiTabel, ['size' => 8]),
+                $paragrafTengah
+            );
+        }
     }
 
     
     
+    }
+
+    // Rekapitulasi umum dan deskripsi hanya untuk laporan harian.
+    if (!$isBulanan && !$isMingguan) {
     // ==================================================
     // 2. REKAPITULASI KEHADIRAN
     // Tabel kedua
@@ -1162,7 +1569,9 @@ $section->addText(
 // TANDA TANGAN
 // ==================================================
 
-$section->addTextBreak(2);
+    }
+
+    $section->addTextBreak(2);
 
 $section->addText('Mengetahui,', $normal, [
     'alignment' => Jc::RIGHT,
@@ -1204,6 +1613,11 @@ $section->addText('________________________', $tebal, [
     try {
         $writer = IOFactory::createWriter($phpWord, 'Word2007');
         $writer->save($filePath);
+
+        clearstatcache(true, $filePath);
+        if (!is_file($filePath) || filesize($filePath) <= 0) {
+            throw new \RuntimeException('File Word tidak berhasil dibuat atau kosong.');
+        }
     } catch (\Throwable $e) {
         log_message(
             'error',
