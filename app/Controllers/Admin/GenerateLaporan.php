@@ -1640,106 +1640,290 @@ $section->addText('________________________', $tebal, [
 }
 
     // ========================================================
-    // KIRIM WHATSAPP
+    // SIAPKAN LAPORAN WHATSAPP (TANPA FONNTE)
     // ========================================================
 
-    public function kirimWhatsApp()
-    {
-        $tanggal = trim(
-            (string) ($this->request->getPost('tanggal') ?? '')
-        );
+   
 
-        if (!$this->tanggalValid($tanggal)) {
-            return redirect()
-                ->to('/admin/laporan')
-                ->with('msg', 'Tanggal laporan tidak valid.');
+
+public function kirimWhatsApp()
+{
+    try {
+        $periode = strtolower(trim((string) (
+            $this->request->getPost('periode') ?? 'harian'
+        )));
+
+        if (!in_array($periode, ['harian', 'mingguan', 'bulanan'], true)) {
+            return redirect()->to('/admin/laporan')
+                ->with('msg', 'Periode laporan tidak dikenali.');
         }
 
-        $nomorTujuan = env('WA_TARGET_NUMBER');
-        $token = env('FONNTE_TOKEN');
+        // Menentukan tanggal laporan.
+        if ($periode === 'bulanan') {
+            $bulan = trim((string) (
+                $this->request->getPost('bulan') ?? ''
+            ));
 
-        if (empty($nomorTujuan)) {
-            return redirect()
-                ->to('/admin/laporan')
-                ->with('msg', 'Nomor WhatsApp tujuan belum diatur.');
+            if (!$this->bulanValid($bulan)) {
+                return redirect()->to('/admin/laporan')
+                    ->with('msg', 'Bulan laporan tidak valid.');
+            }
+
+            $tanggalAcuan = $bulan . '-01';
+        } else {
+            $fieldTanggal = $periode === 'mingguan'
+                ? 'tanggalMingguan'
+                : 'tanggal';
+
+            $tanggalAcuan = trim((string) (
+                $this->request->getPost($fieldTanggal) ?? ''
+            ));
+
+            if ($tanggalAcuan === '' && $periode === 'mingguan') {
+                $tanggalAcuan = trim((string) (
+                    $this->request->getPost('tanggal') ?? ''
+                ));
+            }
+
+            if (!$this->tanggalValid($tanggalAcuan)) {
+                return redirect()->to('/admin/laporan')
+                    ->with('msg', 'Tanggal laporan tidak valid.');
+            }
         }
 
-        if (empty($token)) {
-            return redirect()
-                ->to('/admin/laporan')
-                ->with('msg', 'Token Fonnte belum diatur.');
+        // Menentukan rentang tanggal.
+        if ($periode === 'harian') {
+            $tanggalMulai = $tanggalAcuan;
+            $tanggalAkhir = $tanggalAcuan;
+        } else {
+            [$tanggalMulai, $tanggalAkhir] = $this->rentangPeriode(
+                $tanggalAcuan,
+                $periode
+            );
         }
 
+        // Mengambil personel aktif.
+        $personel = $this->ambilPersonel();
+
+        if (empty($personel)) {
+            return redirect()->to('/admin/laporan')
+                ->with('msg', 'Data personel aktif masih kosong.');
+        }
+
+        // Mengambil presensi sesuai periode.
         $presensi = $this->presensiModel
-            ->where('waktu_masuk >=', $tanggal . ' 00:00:00')
-            ->where('waktu_masuk <=', $tanggal . ' 23:59:59')
+            ->where('waktu_masuk >=', $tanggalMulai . ' 00:00:00')
+            ->where('waktu_masuk <=', $tanggalAkhir . ' 23:59:59')
+            ->orderBy('waktu_masuk', 'ASC')
             ->findAll();
 
-        $rekap = $this->hitungRekapStatus($presensi);
-        $tanggalFormat = $this->formatTanggalIndonesia($tanggal);
+        // Menggunakan rekap yang sama dengan PDF dan Word.
+        $rekapStatus = $this->hitungRekapStatus($presensi);
 
-        $pesan = "LAPORAN KEHADIRAN PERSONEL\n"
-            . "POLDA JAWA TIMUR BIDANG TIK\n\n"
-            . "Tanggal: " . $tanggalFormat . "\n\n"
-            . "REKAPITULASI KEHADIRAN\n";
+        // Pemetaan personel berdasarkan ID.
+        $personelById = [];
 
-        foreach ($this->statusAbsensi as $status) {
-            $pesan .= $status . ': ' . ($rekap[$status] ?? 0) . "\n";
+        foreach ($personel as $p) {
+            $personelById[(string) ($p['id'] ?? '')] = $p;
         }
 
-        $pesan .= "\nTOTAL PRESENSI: " . array_sum($rekap) . "\n\n"
-            . "Laporan dibuat melalui Sistem Rekapitulasi dan Pelaporan Data "
-            . "Kehadiran Personel Bidang TIK Polda Jawa Timur.";
+        // Kategori laporan.
+        $kategori = [
+            'DINAS LUAR'  => 'DINAS',
+            'LEPAS DINAS' => 'LEPAS DINAS',
+            'CUTI'        => 'CUTI',
+            'SAKIT'       => 'SAKIT',
+            'IZIN'        => 'IZIN',
+            'TERLAMBAT'   => 'TERLAMBAT',
+            'DIK'         => 'DIK',
+            'BKO'          => 'BKO',
+        ];
 
-        $client = \Config\Services::curlrequest([
-            'timeout' => 30,
-            'http_errors' => false,
-        ]);
+        // Menyiapkan daftar nama setiap kategori.
+        $daftarKategori = [];
 
-        try {
-            $response = $client->post(
-                'https://api.fonnte.com/send',
-                [
-                    'headers' => [
-                        'Authorization' => $token,
-                    ],
-                    'form_params' => [
-                        'target' => $nomorTujuan,
-                        'message' => $pesan,
-                    ],
-                ]
+        foreach ($kategori as $status => $label) {
+            $daftarKategori[$status] = [];
+        }
+
+        foreach ($presensi as $absen) {
+            $id = (string) ($absen['personel_id'] ?? '');
+            $p = $personelById[$id] ?? null;
+
+            if (!$p) {
+                continue;
+            }
+
+            $status = $this->normalisasiStatus(
+                (string) ($absen['status'] ?? '')
             );
 
-            $statusCode = $response->getStatusCode();
-            $hasil = json_decode($response->getBody(), true);
-        } catch (\Throwable $e) {
-            log_message(
-                'error',
-                'Gagal mengirim WhatsApp: ' . $e->getMessage()
+            $namaLengkap = trim(
+                (string) ($p['pangkat'] ?? '') . ' ' .
+                (string) ($p['nama'] ?? '')
             );
 
-            return redirect()
-                ->to('/admin/laporan')
-                ->with('msg', 'Gagal menghubungi layanan WhatsApp.');
+            if ($namaLengkap === '') {
+                $namaLengkap = (string) (
+                    $p['nama'] ?? 'Personel'
+                );
+            }
+
+            $keterangan = trim(
+                (string) ($absen['keterangan'] ?? '')
+            );
+
+            $barisNama = $namaLengkap;
+
+            if ($keterangan !== '' && $keterangan !== '-') {
+                $barisNama .= ' (' . $keterangan . ')';
+            }
+
+            if (isset($daftarKategori[$status])) {
+                $daftarKategori[$status][] = $barisNama;
+            }
         }
 
-        if (
-            $statusCode >= 200
-            && $statusCode < 300
-            && isset($hasil['status'])
-            && $hasil['status'] === true
-        ) {
-            return redirect()
-                ->to('/admin/laporan')
-                ->with('msg', 'Laporan berhasil dikirim ke WhatsApp.');
+        // Perhitungan jumlah personel.
+        $jumlahPersonel = count($personel);
+
+        $jumlahHadir = (int) (
+            $rekapStatus['HADIR'] ?? 0
+        );
+
+        $jumlahKurang = max(
+            0,
+            $jumlahPersonel - $jumlahHadir
+        );
+
+        // Format tanggal.
+        if ($periode === 'harian') {
+            $hariTanggal = $this->formatTanggalIndonesia(
+                $tanggalMulai
+            );
+
+            $hari = explode(',', $hariTanggal)[0];
+        } else {
+            $hari = 'Periode ' . ucfirst($periode);
+
+            $hariTanggal = $this->formatTanggalPendek($tanggalMulai)
+                . ' s.d. '
+                . $this->formatTanggalPendek($tanggalAkhir);
         }
 
-        $pesanError = $hasil['reason']
-            ?? $hasil['message']
-            ?? 'Laporan gagal dikirim ke WhatsApp.';
+        // ==================================================
+        // MEMBUAT EMOJI DENGAN KODE UNICODE
+        // ==================================================
 
-        return redirect()
-            ->to('/admin/laporan')
-            ->with('msg', $pesanError);
+       $emojiBullet = "\u{1F539}";
+
+$emojiNomor = [
+    "\u{2460}",
+    "\u{2461}",
+    "\u{2462}",
+    "\u{2463}",
+    "\u{2464}",
+    "\u{2465}",
+    "\u{2466}",
+    "\u{2467}",
+];
+
+$emojiTerimaKasih = "\u{1F64F}";
+
+        // ==================================================
+        // MENYUSUN PESAN WHATSAPP
+        // ==================================================
+
+        $pesan = "Mohon izin Komandan\n\n";
+
+        $pesan .= "Izin melaporkan, berikut kami sampaikan rekapitulasi "
+            . "kehadiran personel Bid TIK Polda Jatim:\n\n";
+
+        $pesan .= $emojiBullet . "HARI     : " . $hari . "\n";
+        $pesan .= $emojiBullet . "TGL        : " . $hariTanggal . "\n";
+        $pesan .= $emojiBullet . "PUKUL  : 07.00 WIB sd selesai\n\n";
+
+        $pesan .= "Absensi Satker BID TIK POLDA JATIM:\n\n";
+
+        $pesan .= "Jumlah : " . $jumlahPersonel . " Pers\n";
+        $pesan .= "Kurang : " . $jumlahKurang . " Pers\n";
+        $pesan .= "Hadir    : " . $jumlahHadir . " Pers\n\n";
+
+        $pesan .= "KETERANGAN:\n\n";
+
+        $nomor = 0;
+
+        foreach ($kategori as $status => $label) {
+            $daftar = $daftarKategori[$status];
+
+            $jumlahKategori = (int) (
+                $rekapStatus[$status] ?? 0
+            );
+
+            $pesan .= $emojiNomor[$nomor] . ' '
+                . $label . ': '
+                . $jumlahKategori . " Pers\n";
+
+            foreach ($daftar as $nama) {
+                $pesan .= "       > " . $nama . "\n";
+            }
+
+            $pesan .= "\n";
+            $nomor++;
+        }
+
+        // Mengambil poin arahan dari database.
+        $deskripsi = trim(
+            $this->ambilDeskripsi(
+                $tanggalMulai,
+                $tanggalAkhir
+            )
+        );
+
+        $pesan .= "Adapun poin arahan sebagai berikut:\n\n";
+
+        if ($deskripsi !== '' && $deskripsi !== '-') {
+            $pesan .= $deskripsi;
+        } else {
+            $pesan .= '-';
+        }
+
+        $pesan .= "\n\nDemikian dilaporkan, terima kasih. "
+            . $emojiTerimaKasih;
+
+        // Memastikan pesan memiliki encoding UTF-8 yang valid.
+        if (!preg_match('//u', $pesan)) {
+            throw new \RuntimeException(
+                'Encoding pesan WhatsApp bukan UTF-8 yang valid.'
+            );
+        }
+
+        // Encode pesan untuk URL WhatsApp.
+        $query = http_build_query(
+            ['text' => $pesan],
+            '',
+            '&',
+            PHP_QUERY_RFC3986
+        );
+
+        $urlWhatsApp = 'https://wa.me/?' . $query;
+
+        return redirect()->to($urlWhatsApp);
+
+    } catch (\Throwable $e) {
+        log_message(
+            'error',
+            'Menyiapkan laporan WhatsApp gagal: '
+            . $e->getMessage()
+            . ' | File: ' . $e->getFile()
+            . ' | Baris: ' . $e->getLine()
+        );
+
+        return redirect()->to('/admin/laporan')
+            ->with(
+                'msg',
+                'Laporan WhatsApp gagal disiapkan. Periksa log aplikasi.'
+            );
     }
+}
 }

@@ -917,7 +917,7 @@
 
                                     <input
                                         type="date"
-                                        name="tanggal"
+                                        name="tanggalMingguan"
                                         id="tanggalMingguan"
                                         class="form-control date-input"
                                         value="<?= date('Y-m-d'); ?>"

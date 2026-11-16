@@ -58,7 +58,6 @@ if ($user && is_guru()) {
 $adminMenus = [
    ['title' => 'Dashboard', 'url' => 'admin/dashboard', 'icon' => 'dashboard', 'context' => 'admin-dashboard', 'perm' => 'admin.access'],
    ['title' => 'Absensi Personel', 'url' => 'admin/absensi', 'icon' => 'checklist', 'context' => 'absen-guru', 'perm' => 'attendance.edit'],
-   ['title' => 'Data Perizinan', 'url' => 'admin/perizinan', 'icon' => 'mail', 'context' => 'perizinan', 'perm' => 'attendance.edit'],
    ['title' => 'Hari Libur', 'url' => 'admin/holiday', 'icon' => 'event_busy', 'context' => 'holiday', 'perm' => 'settings.manage'],
    ['title' => 'Data Personel', 'url' => 'admin/data-personel', 'icon' => 'person', 'context' => 'siswa', 'perm' => 'students.manage'],
    ['title' => 'Generate Laporan', 'url' => 'admin/laporan', 'icon' => 'print', 'context' => 'laporan', 'perm' => 'attendance.view'],
