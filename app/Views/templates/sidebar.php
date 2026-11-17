@@ -63,8 +63,6 @@ $adminMenus = [
    ['title' => 'Generate Laporan', 'url' => 'admin/laporan', 'icon' => 'print', 'context' => 'laporan', 'perm' => 'attendance.view'],
    ['title' => 'Data Petugas', 'url' => 'admin/petugas', 'icon' => 'computer', 'context' => 'petugas', 'perm' => 'petugas.manage'],
    ['title' => 'Pengaturan', 'url' => 'admin/general-settings', 'icon' => 'settings', 'context' => 'general_settings', 'perm' => 'settings.manage'],
-   ['title' => 'Audit Log', 'url' => 'admin/audit-log', 'icon' => 'history', 'context' => 'audit-log', 'perm' => 'admin.access'],
-   ['title' => 'Backup & Restore', 'url' => 'admin/backup', 'icon' => 'backup', 'context' => 'backup', 'perm' => 'backup.manage'],
 ];
 
 $adminItems = [];

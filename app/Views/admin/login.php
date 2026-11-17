@@ -247,43 +247,6 @@
       background: rgba(255, 255, 255, 0.25);
    }
 
-
-/* BUTTON AJUKAN IZIN */
-.login-btn-izin{
-    color:#ffffff;
-    background:#111111;
-    border:1px solid #2a2a2a;
-    box-shadow:0 7px 18px rgba(0,0,0,.30);
-}
-
-.login-btn-izin:hover{
-    color:#ffffff;
-    background:#000000;
-    border:1px solid #3a3a3a;
-    transform:translateY(-2px);
-}
-
-/* BUTTON CEK KEHADIRAN */
-.login-btn-kehadiran,
-.login-btn-kehadiran:link,
-.login-btn-kehadiran:visited{
-    background: linear-gradient(135deg,#7b1113,#b32025);
-    color:#ffffff !important;
-    border:none;
-    box-shadow:0 7px 18px rgba(120,0,0,.30);
-    text-decoration:none;
-}
-
-.login-btn-kehadiran:hover{
-    background: linear-gradient(135deg,#8f1619,#c62828);
-    color:#ffffff !important;
-    transform:translateY(-2px);
-}
-
-.login-btn-kehadiran i{
-    color:#ffffff !important;
-}
-
    /* FOOTER */
    .login-footer {
       text-align: center;
@@ -496,31 +459,7 @@
             </div>
 
 
-            <!-- IZIN / SAKIT -->
-            <a
-               href="<?= base_url('izin') ?>"
-               class="login-btn login-btn-izin">
-
-               <i class="material-icons">
-                  mail
-               </i>
-
-               Ajukan Izin / Sakit
-
-            </a>
-
-
-<a href="<?= base_url('cek-kehadiran') ?>"
-   class="login-btn login-btn-kehadiran"
-   style="margin-top:12px;">
-               <i class="material-icons">
-                  visibility
-               </i>
-
-               Cek Kehadiran
-
-            </a>
-
+           
 
             <!-- MAGIC LINK -->
             <?php if (setting('Auth.allowMagicLinkLogins')): ?>

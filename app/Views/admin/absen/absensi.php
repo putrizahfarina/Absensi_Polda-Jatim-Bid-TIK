@@ -371,7 +371,6 @@
     .badge-sakit { background: #ffedd5; color: #c2410c; }
     .badge-primary { background: #e0f2fe; color: #0369a1; }
     .badge-izin { background: #fef9c3; color: #a16207; }
-    .badge-alfa { background: #fee2e2; color: #b91c1c; }
     .badge-other { background: #f1f5f9; color: #000000; }
 
     /* Input Controls */
@@ -587,7 +586,6 @@
             <button type="button" class="btn btn-status active" data-status="Sakit"><strong>S</strong><br><small>SAKIT</small></button>
             <button type="button" class="btn btn-status" data-status="Dinas Luar"><strong>DL</strong><br><small>DINAS LUAR</small></button>
             <button type="button" class="btn btn-status" data-status="Izin"><strong>I</strong><br><small>IZIN</small></button>
-            <button type="button" class="btn btn-status" data-status="Alfa"><strong>A</strong><br><small>ALFA</small></button>
             <button type="button" class="btn btn-status" data-status="Lepas Dinas"><strong>LD</strong><br><small>LEPAS DINAS</small></button>
             <button type="button" class="btn btn-status" data-status="Cuti"><strong>C</strong><br><small>CUTI</small></button>
             <button type="button" class="btn btn-status" data-status="Terlambat"><strong>TL</strong><br><small>TERLAMBAT</small></button>
@@ -676,7 +674,6 @@
                     <option value="Sakit">Sakit</option>
                     <option value="Dinas Luar">Dinas Luar</option>
                     <option value="Izin">Izin</option>
-                    <option value="Alfa">Alfa</option>
                     <option value="Lepas Dinas">Lepas Dinas</option>
                     <option value="Cuti">Cuti</option>
                     <option value="Terlambat">Terlambat</option>
@@ -746,7 +743,6 @@ function initials(status) {
         'Sakit': 'S',
         'Dinas Luar': 'DL',
         'Izin': 'I',
-        'Alfa': 'A',
         'Lepas Dinas': 'LD',
         'Cuti': 'C',
         'Terlambat': 'TL',
@@ -1100,7 +1096,7 @@ function renderChips() {
 function renderSummary() {
     const container = document.getElementById('summaryContainer');
     const counts = {
-        'Hadir': 0, 'Izin': 0, 'Sakit': 0, 'Dinas Luar': 0, 'Alfa': 0,
+        'Hadir': 0, 'Izin': 0, 'Sakit': 0, 'Dinas Luar': 0, 
         'Lepas Dinas': 0, 'Cuti': 0, 'Terlambat': 0, 'Pendidikan': 0, 'BKO': 0
     };
 
@@ -1112,7 +1108,6 @@ function renderSummary() {
     const items = [
         ['Hadir', 'HADIR (H)', '#10b981'], ['Izin', 'IZIN (I)', '#eab308'],
         ['Sakit', 'SAKIT (S)', '#f97316'], ['Dinas Luar', 'DINAS LUAR (DL)', '#0ea5e9'],
-        ['Alfa', 'ALFA (A)', '#ef4444'], ['Lepas Dinas', 'LEPAS DINAS (LD)', '#8b5cf6'],
         ['Cuti', 'CUTI (C)', '#ec4899'], ['Terlambat', 'TERLAMBAT (TL)', '#64748b'],
         ['Pendidikan', 'PENDIDIKAN (DIK)', '#14b8a6'], ['BKO', 'BKO', '#3b82f6']
     ];
@@ -1192,7 +1187,6 @@ function displayTablePage() {
         if (status === 'Sakit') badge = 'badge-sakit';
         else if (status === 'Dinas Luar') badge = 'badge-primary';
         else if (status === 'Izin') badge = 'badge-izin';
-        else if (status === 'Alfa') badge = 'badge-alfa';
         else if (status !== 'Hadir') badge = 'badge-other';
 
         const tr = document.createElement('tr');

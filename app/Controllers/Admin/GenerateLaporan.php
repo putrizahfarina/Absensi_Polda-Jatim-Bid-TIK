@@ -1648,7 +1648,11 @@ $section->addText('________________________', $tebal, [
 
 public function kirimWhatsApp()
 {
+    log_message('error', 'TES ROUTE WHATSAPP: FUNGSI TERPANGGIL');
+
     try {
+        log_message('error', 'TES TRY WHATSAPP: MASUK BLOK TRY');
+
         $periode = strtolower(trim((string) (
             $this->request->getPost('periode') ?? 'harian'
         )));
@@ -1811,24 +1815,28 @@ public function kirimWhatsApp()
                 . $this->formatTanggalPendek($tanggalAkhir);
         }
 
+       
         // ==================================================
         // MEMBUAT EMOJI DENGAN KODE UNICODE
         // ==================================================
 
-       $emojiBullet = "\u{1F539}";
+        // Emoji kotak putih: ▫️
+        $emojiBullet = "\u{25AB}\u{FE0F}";
 
-$emojiNomor = [
-    "\u{2460}",
-    "\u{2461}",
-    "\u{2462}",
-    "\u{2463}",
-    "\u{2464}",
-    "\u{2465}",
-    "\u{2466}",
-    "\u{2467}",
-];
+        // Emoji angka 1 sampai 8
+        $emojiNomor = [
+            "\u{0031}\u{FE0F}\u{20E3}", // 1️⃣
+            "\u{0032}\u{FE0F}\u{20E3}", // 2️⃣
+            "\u{0033}\u{FE0F}\u{20E3}", // 3️⃣
+            "\u{0034}\u{FE0F}\u{20E3}", // 4️⃣
+            "\u{0035}\u{FE0F}\u{20E3}", // 5️⃣
+            "\u{0036}\u{FE0F}\u{20E3}", // 6️⃣
+            "\u{0037}\u{FE0F}\u{20E3}", // 7️⃣
+            "\u{0038}\u{FE0F}\u{20E3}", // 8️⃣
+        ];
 
-$emojiTerimaKasih = "\u{1F64F}";
+        // Emoji terima kasih: 🙏
+        $emojiTerimaKasih = "\u{1F64F}";
 
         // ==================================================
         // MENYUSUN PESAN WHATSAPP
@@ -1839,16 +1847,19 @@ $emojiTerimaKasih = "\u{1F64F}";
         $pesan .= "Izin melaporkan, berikut kami sampaikan rekapitulasi "
             . "kehadiran personel Bid TIK Polda Jatim:\n\n";
 
+        // Identitas laporan
         $pesan .= $emojiBullet . "HARI     : " . $hari . "\n";
         $pesan .= $emojiBullet . "TGL        : " . $hariTanggal . "\n";
         $pesan .= $emojiBullet . "PUKUL  : 07.00 WIB sd selesai\n\n";
 
+        // Rekapitulasi kehadiran
         $pesan .= "Absensi Satker BID TIK POLDA JATIM:\n\n";
 
-        $pesan .= "Jumlah : " . $jumlahPersonel . " Pers\n";
-        $pesan .= "Kurang : " . $jumlahKurang . " Pers\n";
-        $pesan .= "Hadir    : " . $jumlahHadir . " Pers\n\n";
+        $pesan .= $emojiBullet . "Jumlah : " . $jumlahPersonel . " Pers\n";
+        $pesan .= $emojiBullet . "Kurang : " . $jumlahKurang . " Pers\n";
+        $pesan .= $emojiBullet . "Hadir    : " . $jumlahHadir . " Pers\n\n";
 
+        // Keterangan kehadiran
         $pesan .= "KETERANGAN:\n\n";
 
         $nomor = 0;
@@ -1872,7 +1883,7 @@ $emojiTerimaKasih = "\u{1F64F}";
             $nomor++;
         }
 
-        // Mengambil poin arahan dari database.
+        // Mengambil poin arahan dari database
         $deskripsi = trim(
             $this->ambilDeskripsi(
                 $tanggalMulai,
@@ -1891,6 +1902,10 @@ $emojiTerimaKasih = "\u{1F64F}";
         $pesan .= "\n\nDemikian dilaporkan, terima kasih. "
             . $emojiTerimaKasih;
 
+// DEBUG: Memeriksa karakter emoji dalam pesan WhatsApp
+log_message('error', 'PESAN WHATSAPP: ' . $pesan);
+log_message('error', 'HEX PESAN WHATSAPP: ' . bin2hex($pesan));
+
         // Memastikan pesan memiliki encoding UTF-8 yang valid.
         if (!preg_match('//u', $pesan)) {
             throw new \RuntimeException(
@@ -1898,18 +1913,33 @@ $emojiTerimaKasih = "\u{1F64F}";
             );
         }
 
-        // Encode pesan untuk URL WhatsApp.
-        $query = http_build_query(
-            ['text' => $pesan],
-            '',
-            '&',
-            PHP_QUERY_RFC3986
-        );
+        // Memastikan pesan memiliki encoding UTF-8 yang valid.
+if (!preg_match('//u', $pesan)) {
+    throw new \RuntimeException(
+        'Encoding pesan WhatsApp bukan UTF-8 yang valid.'
+    );
+}
 
-        $urlWhatsApp = 'https://wa.me/?' . $query;
+// Encode pesan untuk URL WhatsApp.
+$pesanEncoded = rawurlencode($pesan);
 
-        return redirect()->to($urlWhatsApp);
+log_message(
+    'error',
+    'TES DECODE URL: ' . (
+        rawurldecode($pesanEncoded) === $pesan
+            ? 'BERHASIL'
+            : 'GAGAL'
+    )
+);
 
+$urlWhatsApp = 'https://api.whatsapp.com/send?text=' . $pesanEncoded;
+
+return redirect()->to($urlWhatsApp);
+
+// Membuat URL WhatsApp
+$urlWhatsApp = 'https://api.whatsapp.com/send?text=' . $pesanEncoded;
+
+return redirect()->to($urlWhatsApp);
     } catch (\Throwable $e) {
         log_message(
             'error',
