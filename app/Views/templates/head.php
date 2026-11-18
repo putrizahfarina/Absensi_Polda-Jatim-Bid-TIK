@@ -13,4 +13,15 @@
    <?= $this->include('templates/css'); ?>
 
    <title><?= $title ?></title>
+
+   <!-- Font Awesome Global -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        /* Mencegah layar bergeser saat pindah antara halaman pendek dan panjang */
+        html { overflow-y: scroll; }
+    </style>
+
+    <!-- Slot CSS khusus per halaman -->
+    <?= $this->renderSection('styles') ?>
 </head>

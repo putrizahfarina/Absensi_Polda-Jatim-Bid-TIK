@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <?= $this->include("templates/head") ?>
 
@@ -34,7 +33,7 @@
       };
    </script>
 
-    <?= $this->renderSection("scripts") ?>
+   <?= $this->renderSection("scripts") ?>
 </body>
 
 </html>

@@ -555,10 +555,10 @@
     <div class="hero-header d-flex justify-content-between align-items-center flex-wrap gap-3 mt-3">
         <div>
             <span class="hero-subtitle-tag"><i class="fas fa-circle me-1" style="font-size:8px"></i> SISTEM INFORMASI BIDANG TIK</span>
-            <h3 class="hero-title">Absensi Personel Bid TIK</h3>
+            <h3 class="hero-title">Absensi Personel BID TIK</h3>
             <div class="hero-date-badge mt-1">
-                <i class="far fa-calendar-alt me-2 text-warning"></i>
-                <?= esc($tanggal) ?>
+                <i class="far fa-calendar-alt" style="margin-right: 8px;"></i> <?= $tanggal ?>
+                
             </div>
         </div>
 
@@ -715,6 +715,7 @@
 
 const allPersonel = <?= json_encode($personel ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const existingAbsen = <?= json_encode($absenHariIni ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+const serverToday = "<?= date('Y-m-d') ?>";
 
 let selectedStatus = 'Sakit';
 let exceptions = [];
@@ -752,7 +753,17 @@ function initials(status) {
     return map[status] || status.charAt(0);
 }
 
-/* Memuat absensi yang sudah ada */
+function formatTanggalIndo(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const hari = parseInt(parts[2], 10);
+    const bulanNama = bulan[parseInt(parts[1], 10) - 1] || parts[1];
+    return `${hari} ${bulanNama} ${parts[0]}`;
+}
+
+/* Memuat absensi yang sudah ada (termasuk yang masuk dari rentang masa lalu) */
 if (existingAbsen && typeof existingAbsen === 'object') {
     Object.keys(existingAbsen).forEach(id => {
         const item = existingAbsen[id];
@@ -768,6 +779,8 @@ if (existingAbsen && typeof existingAbsen === 'object') {
                     divisi: p.ur || '—',
                     status: item.status,
                     keterangan: item.keterangan || '',
+                    tanggal_mulai: item.tanggal_mulai || serverToday,
+                    tanggal_selesai: item.tanggal_selesai || serverToday,
                     is_deleted: false
                 });
             }
@@ -823,7 +836,6 @@ document.addEventListener('DOMContentLoaded', function () {
         renderDropdownList(this.value);
     });
 
-    // Reset pagination ketika melakukan pencarian atau ubah status filter
     document.getElementById('tableSearch').addEventListener('input', () => {
         currentPage = 1; 
         renderTable();
@@ -851,13 +863,31 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    /* Input keterangan */
+    /* Input keterangan & Tanggal (Delegasi Event) */
     chipsContainer.addEventListener('input', function (e) {
-        if (!e.target.classList.contains('input-keterangan')) return;
         const uid = e.target.getAttribute('data-uid');
         const item = exceptions.find(ex => String(ex._uid) === String(uid));
+        
         if (item && !item.is_deleted) {
-            item.keterangan = e.target.value;
+            if (e.target.classList.contains('input-keterangan')) {
+                item.keterangan = e.target.value;
+                renderTable();
+            }
+        }
+    });
+
+    chipsContainer.addEventListener('change', function (e) {
+        const uid = e.target.getAttribute('data-uid');
+        const item = exceptions.find(ex => String(ex._uid) === String(uid));
+        
+        if (item && !item.is_deleted) {
+            if (e.target.classList.contains('input-tgl-mulai')) {
+                item.tanggal_mulai = e.target.value;
+                renderTable();
+            } else if (e.target.classList.contains('input-tgl-selesai')) {
+                item.tanggal_selesai = e.target.value;
+                renderTable();
+            }
         }
     });
 
@@ -981,6 +1011,8 @@ function renderDropdownList(query = '') {
                 divisi: p.ur || '—',
                 status: selectedStatus,
                 keterangan: '',
+                tanggal_mulai: serverToday,
+                tanggal_selesai: serverToday,
                 is_deleted: false
             });
 
@@ -1008,14 +1040,14 @@ function updateStatsText() {
 function renderAll() {
     renderChips();
     renderSummary();
-    renderTable(); // Filter data terbaru setiap kali ada perubahan
+    renderTable(); 
     updateStatsText();
 
     const input = document.getElementById('innerSearchInput');
     if (input) renderDropdownList(input.value);
 }
 
-/* Render kartu status */
+/* Render kartu status dengan input Date */
 function renderChips() {
     const container = document.getElementById('exceptionChipsContainer');
     container.innerHTML = '';
@@ -1058,6 +1090,66 @@ function renderChips() {
                 displayName = item.pangkat + ' ' + displayName;
             }
 
+
+            // Generate field tanggal untuk rentang
+            const isRange = ['Dinas Luar', 'Cuti', 'BKO', 'Pendidikan'].includes(item.status);
+            let dateHtml = '';
+            if (isRange) {
+                const statusText = item.status.toUpperCase();
+                const uid = escapeHtml(item._uid);
+                
+                // Hitung durasi hari awal saat pertama kali dimuat
+                const tglMulaiRender = item.tanggal_mulai || serverToday;
+                const tglSelesaiRender = item.tanggal_selesai || serverToday;
+                let durasiAwal = 1;
+                if(tglMulaiRender && tglSelesaiRender) {
+                    const d1 = new Date(tglMulaiRender);
+                    const d2 = new Date(tglSelesaiRender);
+                    durasiAwal = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+                }
+                
+                dateHtml = `
+                    <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px; margin-top: 12px; margin-bottom: 12px;">
+                        <!-- Header / Judul -->
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #0369a1; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            JANGKA WAKTU ${statusText}
+                        </div>
+                        
+                        <!-- Input Tanggal Mulai & Selesai -->
+                        <div class="d-flex gap-3 mb-1">
+                            <div class="flex-grow-1">
+                                <label style="font-size: 0.75rem; color: #334155; display: block; margin-bottom: 4px;">Mulai</label>
+                                <input type="date" class="form-control input-tgl-mulai" 
+                                    id="mulai-${uid}" onchange="hitungDurasiHari('${uid}')"
+                                    style="font-size: 0.85rem; padding: 6px 10px; color: #000000 !important; background-color: #ffffff !important; border: 1px solid #cbd5e1; border-radius: 6px;"
+                                    data-uid="${uid}" 
+                                    value="${escapeHtml(tglMulaiRender)}" ${marked ? 'disabled' : ''}>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label style="font-size: 0.75rem; color: #334155; display: block; margin-bottom: 4px;">Selesai</label>
+                                <input type="date" class="form-control input-tgl-selesai" 
+                                    id="selesai-${uid}" onchange="hitungDurasiHari('${uid}')"
+                                    style="font-size: 0.85rem; padding: 6px 10px; color: #000000 !important; background-color: #ffffff !important; border: 1px solid #cbd5e1; border-radius: 6px;"
+                                    data-uid="${uid}" 
+                                    value="${escapeHtml(tglSelesaiRender)}" ${marked ? 'disabled' : ''}>
+                            </div>
+                        </div>
+                        
+                        <!-- Teks Bantuan / Keterangan Durasi -->
+                        <div id="teks-durasi-${uid}" style="font-size: 0.75rem; color: #0369a1; font-weight: 600; margin-top: 10px;">
+                            ${durasiAwal} hari &middot; absensi tercatat otomatis setiap hari
+                        </div>
+                    </div>
+                `;
+            }
+
+
             card.innerHTML = `
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div class="d-flex align-items-center" style="gap:10px;min-width:0">
@@ -1079,7 +1171,9 @@ function renderChips() {
                     </span>
                 </div>
 
-                <div class="mt-auto">
+                ${dateHtml}
+
+                <div class="mt-auto pt-2">
                     <input type="text" class="form-control input-keterangan"
                         data-uid="${escapeHtml(item._uid)}"
                         placeholder="Keterangan ${escapeHtml(status.toLowerCase())}..."
@@ -1124,7 +1218,6 @@ function renderSummary() {
     `;
 }
 
-/* Fungsi Memfilter Data Sebelum Paginasi (Baru Ditambahkan) */
 function renderTable() {
     const query = document.getElementById('tableSearch').value.toLowerCase().trim();
     const filter = document.getElementById('tableFilterStatus').value;
@@ -1134,13 +1227,12 @@ function renderTable() {
         if (!e.is_deleted) activeMap[String(e.personel_id)] = e;
     });
 
-    // Reset dan isi ulang array filter
     currentFilteredData = [];
 
     allPersonel.forEach(p => {
         const exception = activeMap[String(p.id)];
         const status = exception ? exception.status : 'Hadir';
-        const keterangan = exception ? (exception.keterangan || '—') : '—';
+        const keterangan = exception ? (exception.keterangan || '') : '';
 
         if (filter !== 'Semua' && status !== filter) return;
 
@@ -1148,12 +1240,9 @@ function renderTable() {
         const nrp = String(p.nrp_nip || '');
 
         if (query && !nama.toLowerCase().includes(query) && !nrp.toLowerCase().includes(query)) return;
-
-        // Push data yang lolos filter ke array paginasi
-        currentFilteredData.push({ p, status, keterangan });
+        currentFilteredData.push({ p, status, keterangan, exception });
     });
 
-    // Pastikan current page tetap valid jika data menyusut akibat filter
     const totalPages = Math.ceil(currentFilteredData.length / rowsPerPage);
     if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
     if (currentPage === 0 && totalPages > 0) currentPage = 1;
@@ -1161,7 +1250,6 @@ function renderTable() {
     displayTablePage();
 }
 
-/* Fungsi Menampilkan Paginasi Berdasarkan Array (Baru Ditambahkan) */
 function displayTablePage() {
     const tbody = document.getElementById('tableAbsenBody');
     tbody.innerHTML = '';
@@ -1176,10 +1264,11 @@ function displayTablePage() {
     const endIdx = startIdx + rowsPerPage;
     const pageData = currentFilteredData.slice(startIdx, endIdx);
 
-    let number = startIdx + 1; // Agar nomor urut berlanjut sesuai halamannya
+    let number = startIdx + 1;
+    const rangeStatuses = ['Dinas Luar', 'Cuti', 'BKO', 'Pendidikan'];
 
     pageData.forEach(item => {
-        const { p, status, keterangan } = item;
+        const { p, status, keterangan, exception } = item;
         const nama = String(p.nama || '');
         const nrp = String(p.nrp_nip || '');
 
@@ -1188,6 +1277,17 @@ function displayTablePage() {
         else if (status === 'Dinas Luar') badge = 'badge-primary';
         else if (status === 'Izin') badge = 'badge-izin';
         else if (status !== 'Hadir') badge = 'badge-other';
+
+        // Format kolom Keterangan: tampilkan rentang tanggal biru untuk status multi-hari
+        let keteranganHtml = escapeHtml(keterangan || '—');
+        if (exception && rangeStatuses.includes(status)) {
+            const tglMulai = formatTanggalIndo(exception.tanggal_mulai || serverToday);
+            const tglSelesai = formatTanggalIndo(exception.tanggal_selesai || serverToday);
+            keteranganHtml = `<div style="color:#0369a1; font-size: 0.75rem; font-weight:700;">${escapeHtml(tglMulai + ' – ' + tglSelesai)}</div>`;
+            if (keterangan) {
+                keteranganHtml += `<div style="color:#475569; font-size:0.8rem; font-weight:500;">${escapeHtml(keterangan)}</div>`;
+            }
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1198,7 +1298,7 @@ function displayTablePage() {
             <td><span class="badge bg-light text-dark border" style="border-radius: 6px; font-weight: 700;">${escapeHtml(p.subbid || '—')}</span></td>
             <td><span class="badge bg-light text-dark border" style="border-radius: 6px; font-weight: 700;">${escapeHtml(p.ur || '—')}</span></td>
             <td><span class="badge-status ${badge}">● ${escapeHtml(status)}</span></td>
-            <td style="color:#475569; font-weight:500;">${escapeHtml(keterangan)}</td>
+            <td style="color:#475569; font-weight:500;">${keteranganHtml}</td>
         `;
         tbody.appendChild(tr);
         number++;
@@ -1207,7 +1307,6 @@ function displayTablePage() {
     renderPaginationControls();
 }
 
-/* Fungsi Render Tombol Paginasi (Baru Ditambahkan) */
 function renderPaginationControls() {
     const paginationInfo = document.getElementById('paginationInfo');
     const paginationButtons = document.getElementById('paginationButtons');
@@ -1228,14 +1327,12 @@ function renderPaginationControls() {
     paginationButtons.innerHTML = '';
     
     if (totalPages > 1) {
-        // Tombol Sebelumnya
         const prevBtn = document.createElement('button');
         prevBtn.className = `page-btn-custom ${currentPage === 1 ? 'disabled' : ''}`;
         prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
         prevBtn.onclick = () => { if(currentPage > 1) { currentPage--; displayTablePage(); } };
         paginationButtons.appendChild(prevBtn);
 
-        // Deret Angka Paginasi (dibatasi max 5 kotak agar rapi)
         let startPage = Math.max(1, currentPage - 2);
         let endPage = Math.min(totalPages, startPage + 4);
         if (endPage - startPage < 4) { startPage = Math.max(1, endPage - 4); }
@@ -1248,7 +1345,6 @@ function renderPaginationControls() {
             paginationButtons.appendChild(btn);
         }
 
-        // Tombol Selanjutnya
         const nextBtn = document.createElement('button');
         nextBtn.className = `page-btn-custom ${currentPage === totalPages ? 'disabled' : ''}`;
         nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
@@ -1256,6 +1352,30 @@ function renderPaginationControls() {
         paginationButtons.appendChild(nextBtn);
     }
 }
+
+    // Fungsi untuk menghitung perubahan hari secara dinamis
+// Jadikan fungsi global dengan window. agar pasti bisa dipanggil oleh input HTML
+window.hitungDurasiHari = function(uid) {
+    const mulaiEl = document.getElementById('mulai-' + uid);
+    const selesaiEl = document.getElementById('selesai-' + uid);
+    const teksDurasiEl = document.getElementById('teks-durasi-' + uid);
+    
+    if (mulaiEl && selesaiEl && mulaiEl.value && selesaiEl.value && teksDurasiEl) {
+        const date1 = new Date(mulaiEl.value);
+        const date2 = new Date(selesaiEl.value);
+        
+        // Hitung selisih hari
+        const selisihWaktu = date2.getTime() - date1.getTime();
+        const selisihHari = Math.ceil(selisihWaktu / (1000 * 3600 * 24)) + 1;
+        
+        if (selisihHari > 0) {
+            teksDurasiEl.innerHTML = selisihHari + ' hari &middot; absensi tercatat otomatis setiap hari';
+        } else {
+            teksDurasiEl.innerHTML = '<span style="color:#ef4444;">Tanggal selesai tidak boleh mundur!</span>';
+        }
+    }
+};
+
 </script>
 
 <?= $this->endSection() ?>
