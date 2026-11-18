@@ -5,6 +5,7 @@
 
 <?= $this->section('content'); ?>
 
+<style>
 
 /* REGISTER */
 .register-link {
@@ -32,7 +33,7 @@
    color: #f5c542 !important;
    text-decoration: underline !important;
 }
-<style>
+
    /* =========================================
       LOGIN MODERN - BID TIK POLDA JATIM
       ========================================= */

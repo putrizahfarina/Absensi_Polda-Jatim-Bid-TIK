@@ -58,11 +58,9 @@ if ($user && is_guru()) {
 $adminMenus = [
    ['title' => 'Dashboard', 'url' => 'admin/dashboard', 'icon' => 'dashboard', 'context' => 'admin-dashboard', 'perm' => 'admin.access'],
    ['title' => 'Absensi Personel', 'url' => 'admin/absensi', 'icon' => 'checklist', 'context' => 'absen-guru', 'perm' => 'attendance.edit'],
-   ['title' => 'Hari Libur', 'url' => 'admin/holiday', 'icon' => 'event_busy', 'context' => 'holiday', 'perm' => 'settings.manage'],
    ['title' => 'Data Personel', 'url' => 'admin/data-personel', 'icon' => 'person', 'context' => 'siswa', 'perm' => 'students.manage'],
    ['title' => 'Generate Laporan', 'url' => 'admin/laporan', 'icon' => 'print', 'context' => 'laporan', 'perm' => 'attendance.view'],
    ['title' => 'Data Petugas', 'url' => 'admin/petugas', 'icon' => 'computer', 'context' => 'petugas', 'perm' => 'petugas.manage'],
-   ['title' => 'Pengaturan', 'url' => 'admin/general-settings', 'icon' => 'settings', 'context' => 'general_settings', 'perm' => 'settings.manage'],
 ];
 
 $adminItems = [];
@@ -82,12 +80,33 @@ $showSectionHeaders = ($hasTeacherSection && $hasAdminSection);
 ?>
 <div class="sidebar" data-color="<?= $sidebarColor; ?>" data-image="<?= base_url(''); ?>">
    <div class="logo">
-      <a class="simple-text logo-normal">
-         <b><?= $roleLabel; ?></b>
-         <br>
-         <small>kEPOLISIAN DAERAH JAWA TIMUR</small>
-      </a>
-   </div>
+   <a href="<?= base_url('admin/dashboard'); ?>"
+      class="simple-text logo-normal"
+      style="display: flex;
+             flex-direction: column;
+             align-items: center;
+             text-align: center;
+             padding: 10px 5px;">
+
+      <!-- LOGO SIPATIK -->
+      <img src="<?= base_url('assets/img/logo-sipatik.png'); ?>"
+           alt="Logo SIPATIK"
+           style="width: 100px;
+                  height: 100px;
+                  object-fit: contain;
+                  margin-bottom: 8px;">
+
+      <!-- NAMA APLIKASI -->
+      <b style="font-size: 18px; letter-spacing: 1px;">
+         SIPATIK
+      </b>
+
+      <small style="font-size: 9px; line-height: 1.5;">
+         KEPOLISIAN DAERAH JAWA TIMUR
+      </small>
+
+   </a>
+</div>
    <div class="sidebar-wrapper">
       <ul class="nav">
 
