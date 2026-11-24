@@ -6,7 +6,6 @@
             <th><b>Username</b></th>
             <th><b>Email</b></th>
             <th><b>Role</b></th>
-            <th><b>Guru</b></th>
             <th><b>Status</b></th>
             <th><b>Aksi</b></th>
          </thead>
