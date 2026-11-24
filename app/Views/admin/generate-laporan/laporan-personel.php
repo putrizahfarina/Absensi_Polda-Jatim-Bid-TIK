@@ -278,14 +278,16 @@ $tanggalLabel = ($isMingguan || $isBulanan) ? 'PERIODE' : 'HARI/TANGGAL';
             border-spacing: 0;
         }
 
-        .attendance-table th,
-        .attendance-table td {
-            border: 1px solid #555;
-            padding: 6px 4px;
-            vertical-align: top;
-            overflow-wrap: anywhere;
-            word-break: normal;
-        }
+        
+.attendance-table th,
+.attendance-table td {
+    border: 1px solid #555;
+    padding: 6px 4px;
+    vertical-align: top !important;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
 
         .attendance-table th {
             background: #b5121b;
@@ -357,29 +359,46 @@ $tanggalLabel = ($isMingguan || $isBulanan) ? 'PERIODE' : 'HARI/TANGGAL';
     overflow-wrap: break-word !important;
     hyphens: none;
     text-align: center;
-    vertical-align: middle;
+    vertical-align: top !important;
     padding: 5px 3px;
     line-height: 1.3;
 }
 
 .attendance-table td.col-subbid,
 .attendance-table td.col-ur {
-    font-size: 9px;
+    font-size: 8px;
 }
 
 .status {
-    display: inline-block;
+    display: block !important;
+    width: 100%;
     max-width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
     font-weight: 700;
-    white-space: pre-line;
+    line-height: 1.45;
+    text-align: center;
+    vertical-align: top !important;
+    white-space: normal;
     overflow-wrap: anywhere;
 }
-
+/* KOLOM STATUS */
+.attendance-table tbody td.status-cell {
+    vertical-align: top !important;
+    text-align: center !important;
+    padding: 5px 3px !important;
+    line-height: 1.45 !important;
+    font-weight: 700 !important;
+}
 .multiline {
     white-space: pre-line;
     overflow-wrap: anywhere;
     line-height: 1.5;
+    vertical-align: top !important;
+    padding-top: 5px !important;
 }
+
+
 
 .empty-data {
     padding: 16px !important;
@@ -414,6 +433,14 @@ $tanggalLabel = ($isMingguan || $isBulanan) ? 'PERIODE' : 'HARI/TANGGAL';
             line-height: 1.4;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+        }
+
+        /* Font judul kolom PENDIDIKAN dan TERLAMBAT dibuat lebih kecil */
+        .rekap-table th.status-label-small {
+            font-size: 7.5px !important;
+            line-height: 1.15 !important;
+            padding-left: 2px;
+            padding-right: 2px;
         }
 
         .rekap-table td {
@@ -763,6 +790,7 @@ $tanggalLabel = ($isMingguan || $isBulanan) ? 'PERIODE' : 'HARI/TANGGAL';
                 page-break-inside: avoid;
             }
         }
+
     </style>
 </head>
 
@@ -1146,20 +1174,21 @@ $tanggalLabel = ($isMingguan || $isBulanan) ? 'PERIODE' : 'HARI/TANGGAL';
                                 <?= esc(trim((string) ($row['ur'] ?? '-'))) ?>
                             </td>
 
-                            <td class="center multiline">
-                                <span class="status">
+                            <td class="status-cell">
                                     <?= esc($statusTampil) ?>
-                                </span>
                             </td>
 
-                            <td class="multiline">
-                                <?= esc($keteranganTampil) ?>
-                            </td>
+                           <td style="position: relative; padding: 0 !important; text-align: left;">
+    <span style="position: absolute; top: 5px; left: 3px; right: 3px;">
+        <?= esc($keteranganTampil) ?>
+    </span>
+</td>
 
-                            <td class="center multiline col-waktu">
-                                <?= esc($waktuTampil) ?>
-                            </td>
-
+         <td style="position: relative; padding: 0 !important; text-align: center;">
+    <span style="position: absolute; top: 5px; left: 3px; right: 3px; text-align: center;">
+        <?= esc($waktuTampil) ?>
+    </span>
+</td>
                         </tr>
 
                     <?php endforeach; ?>
@@ -1188,7 +1217,10 @@ $tanggalLabel = ($isMingguan || $isBulanan) ? 'PERIODE' : 'HARI/TANGGAL';
             <thead>
                 <tr>
                     <?php foreach ($statusAbsensi as $status): ?>
-                        <th><?= esc($status) ?></th>
+                        <?php $statusKeyHeader = strtoupper(trim((string) $status)); ?>
+                        <th class="<?= in_array($statusKeyHeader, ['PENDIDIKAN', 'TERLAMBAT'], true) ? 'status-label-small' : '' ?>">
+                            <?= esc($status) ?>
+                        </th>
                     <?php endforeach; ?>
                     <th><?= ($isMingguan || $isBulanan) ? 'TOTAL PRESENSI' : 'TOTAL' ?></th>
                 </tr>

@@ -23,6 +23,7 @@ class GenerateLaporan extends BaseController
         'CUTI',
         'SAKIT',
         'IZIN',
+        'PENDIDIKAN',
         'TERLAMBAT',
         'DIK',
         'BKO',
@@ -1367,8 +1368,8 @@ $section->addText(
             } else {
                 $timestamp = strtotime($waktuRaw);
 
-                $waktuTampil = $timestamp !== false
-                ? date('d/m/Y H:i', $timestamp)
+          $waktuTampil = $timestamp !== false
+                ? date('H:i', $timestamp)
                 : $waktuRaw;
                         }
         }
@@ -1738,9 +1739,10 @@ public function kirimWhatsApp()
             'CUTI'        => 'CUTI',
             'SAKIT'       => 'SAKIT',
             'IZIN'        => 'IZIN',
+            'PENDIDIKAN'  => 'PENDIDIKAN',
             'TERLAMBAT'   => 'TERLAMBAT',
             'DIK'         => 'DIK',
-            'BKO'          => 'BKO',
+            'BKO'         => 'BKO',
         ];
 
         // Menyiapkan daftar nama setiap kategori.
@@ -1833,6 +1835,7 @@ public function kirimWhatsApp()
             "\u{0036}\u{FE0F}\u{20E3}", // 6️⃣
             "\u{0037}\u{FE0F}\u{20E3}", // 7️⃣
             "\u{0038}\u{FE0F}\u{20E3}", // 8️⃣
+            "\u{0039}\u{FE0F}\u{20E3}", // 9️⃣
         ];
 
         // Emoji terima kasih: 🙏

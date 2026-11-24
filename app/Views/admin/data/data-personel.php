@@ -226,11 +226,6 @@
             
             <!-- Bagian Tombol Aksi (BAWAH) -->
             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                <a href="<?= base_url('admin/data-personel/cetak-qr'); ?>" 
-                   style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <i class="fas fa-qrcode"></i> Cetak QR
-                </a>
-
                 <button type="button" 
                         class="btn btn-light text-dark font-weight-bold px-3 py-2" 
                         style="border-radius: 8px; font-size: 12px; background-color: #9ca3af; color: #1f2937; text-transform: uppercase; cursor: pointer; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"

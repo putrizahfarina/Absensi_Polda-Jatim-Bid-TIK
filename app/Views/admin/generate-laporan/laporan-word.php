@@ -1,4 +1,3 @@
-
 <?php
 /**
  * LAPORAN KEHADIRAN PERSONEL
@@ -399,14 +398,27 @@ $jumlahPersonel = count($dataAbsensi);
                             ) ?>
                         </td>
 
-                        <td class="tengah">
-                            <?= wordEscape(
-                                $getValue(
-                                    $row,
-                                    ['waktu_masuk', 'waktu', 'jam_masuk']
-                                )
-                            ) ?>
-                        </td>
+                       
+<td class="tengah">
+    <?php
+    $waktuRaw = trim((string) $getValue(
+        $row,
+        ['waktu_masuk', 'waktu', 'jam_masuk'],
+        ''
+    ));
+
+    $waktuTampil = '-';
+
+    if ($waktuRaw !== '') {
+        if (preg_match('/(\d{2}:\d{2})(?::\d{2})?/', $waktuRaw, $cocok)) {
+            $waktuTampil = $cocok[1];
+        }
+    }
+    ?>
+
+    <?= wordEscape($waktuTampil) ?>
+</td>
+
                     </tr>
 
                 <?php endforeach; ?>
